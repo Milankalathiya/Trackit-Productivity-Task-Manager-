@@ -1,25 +1,47 @@
-# Trackit-Productivity-Task-Manager-
-A Spring Boot backend for managing user tasks with JWT-based authentication and task scheduling features.
+Trackit-Productivity-Task-Manager-
+A Spring Boot backend for managing user tasks with JWT-based authentication, task scheduling, and repeatable task logic.
 
-# TrackIt Backend
+🚀 TrackIt Backend
+This is the backend service for TrackIt, a task management application built with Spring Boot. It provides a set of secure and well-structured REST APIs for:
 
-This is the backend service for **TrackIt**, a task management application built using Spring Boot. It provides REST APIs for:
+🔐 User registration and login using JWT authentication
 
-- User registration and login with JWT authentication
-- Task creation, daily task listing, task completion
-- Task history retrieval with date filtering
-- Secure endpoints with token-based access
+✅ Task creation, completion, update, and deletion
 
-## Features
-- 🔐 JWT-based user authentication
-- ✅ Task creation & completion
-- 📅 Daily and historical task queries
-- 🛠️ RESTful API design
+📅 Daily and historical task listing with repeat logic
 
-## Tech Stack
-- Java 17+
-- Spring Boot
-- Spring Security
-- JWT (jjwt)
-- H2 / PostgreSQL (configurable)
+🔎 Task history filtering by custom date ranges
 
+🛡️ Secure access to endpoints via token-based authorization
+
+✅ Features
+JWT-based Authentication: Secure login and user identification.
+
+Task Management:
+
+✅ Create Task (supports due date, priority, repeat type)
+
+📋 View All Tasks (mapped to the logged-in user)
+
+📅 View Today’s Tasks (includes tasks with repeat logic)
+
+🔄 View Task History (filter by custom date ranges)
+
+☑️ Mark Task as Complete
+
+🗑️ Delete Task
+
+✏️ Update Task
+
+Robust API Design: Clean and RESTful structure for easy integration with any frontend.
+
+🧰 Tech Stack
+Java 17+
+
+Spring Boot
+
+Spring Security
+
+JWT (via jjwt)
+
+Database: MySQL
