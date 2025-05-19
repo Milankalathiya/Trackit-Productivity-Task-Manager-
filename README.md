@@ -1,4 +1,5 @@
-Trackit-Productivity-Task-Manager-
+#Trackit-Productivity-Task-Manager-
+
 A Spring Boot backend for managing user tasks with JWT-based authentication, task scheduling, and repeatable task logic.
 
 🚀 TrackIt Backend
