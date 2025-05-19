@@ -1,10 +1,12 @@
 package com.trackit.service;
 
 import com.trackit.dto.TaskRequest;
+import com.trackit.exception.ResourceNotFoundException;
 import com.trackit.model.User;
 import com.trackit.model.Task;
 import com.trackit.repository.TaskRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.config.ConfigDataResourceNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.security.access.AccessDeniedException;
 
@@ -54,6 +56,27 @@ public class TaskService {
 
         task.setCompleted(true);
         task.setCompletedAt(LocalDateTime.now());
+
+        return taskRepository.save(task);
+    }
+
+    public void deleteTask(Long taskId, User user){
+        Task task = taskRepository.findByIdAndUser(taskId, user)
+                .orElseThrow(()-> new ResourceNotFoundException("Task not found"));
+
+        taskRepository.delete(task);
+    }
+
+    public Task updateTask(Long taskId, TaskRequest request, User user) {
+        Task task = taskRepository.findByIdAndUser(taskId, user)
+                .orElseThrow(() -> new ResourceNotFoundException("Task not found or doesn't belong to user"));
+
+        // Update task properties
+        task.setTitle(request.getTitle());
+        task.setDescription(request.getDescription());
+        task.setDueDate(request.getDueDate());
+        task.setPriority(request.getPriority());
+        task.setRepeatType(request.getRepeatType());
 
         return taskRepository.save(task);
     }

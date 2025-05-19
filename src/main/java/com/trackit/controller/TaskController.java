@@ -53,4 +53,17 @@ public class TaskController {
         User user = userService.findById(userDetails.getId());
         return ResponseEntity.ok(taskService.markTaskComplete(id, user));
     }
+
+    @DeleteMapping("{id}")
+    public ResponseEntity<?> deleteTask(@PathVariable Long id, @AuthenticationPrincipal CustomUserDetails userDetails){
+        User user = userService.findById(userDetails.getId());
+        taskService.deleteTask(id, user);
+        return ResponseEntity.ok("Task deleted Succesfully");
+    }
+
+    @PutMapping("{id}")
+    public ResponseEntity<?> updateTask(@PathVariable Long id, @RequestBody TaskRequest request, @AuthenticationPrincipal CustomUserDetails userDetails){
+        User user = userService.findById(userDetails.getId());
+        return ResponseEntity.ok(taskService.updateTask(id, request, user));
+    }
 }

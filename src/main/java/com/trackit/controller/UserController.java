@@ -7,7 +7,10 @@ import com.trackit.security.JwtUtil;
 import com.trackit.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/users")
@@ -39,6 +42,20 @@ public class UserController {
 
         return ResponseEntity.ok().body("Bearer " + token);
     }
+
+    @GetMapping("/profile")
+    public ResponseEntity<User> getProfile(Authentication authentication) {
+        String email = authentication.getName(); // Extracted from JWT
+        Optional<User> optionalUser = userService.findByEmail(email);
+
+        if (optionalUser.isPresent()) {
+            return ResponseEntity.ok(optionalUser.get());
+        } else {
+            // User not found - return 404 Not Found
+            return ResponseEntity.notFound().build();
+        }
+    }
+
 
 
 }
