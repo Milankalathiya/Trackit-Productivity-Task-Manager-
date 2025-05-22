@@ -4,17 +4,20 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 
+import io.jsonwebtoken.io.Decoders;
+import io.jsonwebtoken.security.Keys;
 import lombok.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
+import java.security.Key;
 import java.util.Date;
 import java.util.function.Function;
 
 @Component
 public class JwtUtil {
 
-    private final String SECRET = "a2FkbmZqamRzZnh1b2hzaGZkamZzaGprZHNmc2hrZGZqZg=="; // ✅ valid base64
+    private final String SECRET = "a2FkbmZqamRzZnh1b2hzaGZkamZzaGprZHNmc2hrZGZqZg==";
 
 
     // move to application.properties/env
@@ -29,8 +32,9 @@ public class JwtUtil {
     }
 
     private Claims extractAllClaims(String token) {
-        return Jwts.parser()
-                .setSigningKey(SECRET)
+        return Jwts.parserBuilder()
+                .setSigningKey(getSigningKey())
+                .build()
                 .parseClaimsJws(token)
                 .getBody();
     }
@@ -46,10 +50,16 @@ public class JwtUtil {
 
     public String generateToken(UserDetails userDetails) {
         return Jwts.builder()
-                .setSubject(userDetails.getUsername()) // should be email
+                .setSubject(userDetails.getUsername()) // make sure this returns email or username consistently
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 10)) // 10 hours
-                .signWith(SignatureAlgorithm.HS256, SECRET)
+                .signWith(getSigningKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
+
+    private Key getSigningKey() {
+        byte[] keyBytes = Decoders.BASE64.decode(SECRET);
+        return Keys.hmacShaKeyFor(keyBytes);
+    }
+
 }

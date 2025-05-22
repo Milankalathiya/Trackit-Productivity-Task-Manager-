@@ -31,6 +31,7 @@ public class SecurityConfig {
                 .authorizeRequests()
                 .requestMatchers("/api/users/register", "/api/users/login").permitAll()
                 .requestMatchers("/api/users/profile").authenticated()
+                .requestMatchers("/api/habits/**").authenticated()
                 .anyRequest().authenticated()
                 .and()
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
@@ -53,4 +54,5 @@ public class SecurityConfig {
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
+
 }

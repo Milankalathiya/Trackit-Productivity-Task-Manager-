@@ -3,6 +3,7 @@ package com.trackit.service;
 import com.trackit.model.User;
 import com.trackit.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -13,15 +14,17 @@ public class UserService {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
     public User registerUser(User user){
+        user.setPassword(passwordEncoder.encode(user.getPassword())); // 👈 Hash password
         return userRepository.save(user);
     }
 
     public Optional<User> findByEmail(String email){
         return userRepository.findByEmail(email);
     }
-
-
 
     public User findById(Long id) {
         return userRepository.findById(id)
@@ -34,13 +37,18 @@ public class UserService {
                 .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
     }
 
-    public User login(String email, String password) {
-        User user = userRepository.findByEmail(email)
-                .orElse(null); // Handle null case, in case no user is found
-        if (user != null && user.getPassword().equals(password)) {
+    public User login(String username, String password) {
+        User user = userRepository.findByUsername(username).orElse(null);
+        if (user != null && passwordEncoder.matches(password, user.getPassword())) {
             return user;
         }
         return null;
     }
+
+    public Optional<User> findByUsername(String username) {
+        return userRepository.findByUsername(username);
+    }
+
+
 }
 
