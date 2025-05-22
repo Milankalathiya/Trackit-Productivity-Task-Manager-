@@ -1,48 +1,96 @@
-#Trackit-Productivity-Task-Manager-
+📦 Backend Overview — TrackIt 
+A Spring Boot backend for a Task and Habit Tracker app with secure authentication, analytics, and streak tracking. Built as a Semester 3 college mini-project.
 
-A Spring Boot backend for managing user tasks with JWT-based authentication, task scheduling, and repeatable task logic.
+✅ Features Implemented
+🔐 User Module: Register/login with JWT auth and password hashing.
 
-🚀 TrackIt Backend
-This is the backend service for TrackIt, a task management application built with Spring Boot. It provides a set of secure and well-structured REST APIs for:
+📋 Task Module: Add/update/delete tasks, repeat options, task history, completion tracking.
 
-🔐 User registration and login using JWT authentication
+📆 Habit Module: Create/log habits, view weekly progress and streaks.
 
-✅ Task creation, completion, update, and deletion
+📊 Analytics Module: Completion stats, best/worst days, habit consistency.
 
-📅 Daily and historical task listing with repeat logic
+🧱 Project Structure with Explanations
+config/
+SecurityConfig: Configures Spring Security, JWT filters, and endpoint protection.
 
-🔎 Task history filtering by custom date ranges
+controller/
+UserController: Manages registration, login, and user profile operations.
 
-🛡️ Secure access to endpoints via token-based authorization
+TaskController: Handles task creation, editing, deletion, and completion.
 
-✅ Features
-JWT-based Authentication: Secure login and user identification.
+HabitController: Handles creation and listing of habits.
 
-Task Management:
+HabitLogController: Logs habit completion and fetches user habit progress.
 
-✅ Create Task (supports due date, priority, repeat type)
+AnalyticsController: Returns summary statistics and performance insights.
 
-📋 View All Tasks (mapped to the logged-in user)
+dto/
+LoginRequest: DTO for user login credentials (email & password).
 
-📅 View Today’s Tasks (includes tasks with repeat logic)
+TaskRequest: DTO for sending task data (title, due date, priority, repeat, etc.).
 
-🔄 View Task History (filter by custom date ranges)
+exception/
+UserNotFoundException: Thrown when user is not found in the DB.
 
-☑️ Mark Task as Complete
+ResourceNotFoundException: Thrown for missing tasks, habits, etc.
 
-🗑️ Delete Task
+model/
+User: Represents registered users.
 
-✏️ Update Task
+Task: Represents to-do items with due date and repeat configuration.
 
-Robust API Design: Clean and RESTful structure for easy integration with any frontend.
+Habit: Represents repeatable daily/weekly habits.
 
-🧰 Tech Stack
-Java 17+
+HabitLog: Tracks when users complete a habit entry.
 
-Spring Boot
+Priority: Enum to define task priority (Low, Medium, High).
 
-Spring Security
+RepeatType: Enum for repeat logic (None, Daily, Weekly).
 
-JWT (via jjwt)
+repository/
+UserRepository: JPA interface for user DB operations.
 
-Database: MySQL
+TaskRepository: Interface to interact with tasks in DB.
+
+HabitRepository: Interface for habit CRUD operations.
+
+HabitLogRepository: Handles storing/logging user habit completions.
+
+security/
+CustomUserDetails: Wraps user data for Spring Security.
+
+CustomUserDetailsService: Loads user from DB for authentication.
+
+JwtAuthenticationFilter: Authenticates login requests using JWT.
+
+JwtFilter: Secures API endpoints by verifying token on each request.
+
+JwtUtil: Utility for generating and parsing JWT tokens.
+
+service/
+UserService: Contains user-related business logic (register, login, etc.).
+
+TaskService: Handles business logic for all task operations.
+
+HabitService: Processes habit CRUD and frequency logic.
+
+HabitLogService: Tracks streaks and manages habit logging.
+
+TrackitApplication.java
+The Spring Boot application entry point (runs your backend).
+
+⚙️ Resources
+application.properties: Configures DB, JWT secret, server port, etc.
+
+static/, templates/: Reserved folders (currently unused for frontend/templates).
+
+🛠️ Tech Stack
+Spring Boot, Spring Security, JWT, JPA/Hibernate
+
+MySQL / H2 (DB assumed)
+
+Maven/Gradle (build tool assumed)
+
+🚀 Ready for Frontend
+This backend is now production-ready for integration with a frontend (React/Next.js suggested). All core modules and features are implemented and structured cleanly.
