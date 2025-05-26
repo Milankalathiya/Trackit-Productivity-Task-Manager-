@@ -1,12 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Eye, EyeOff, User, Lock, LogIn, AlertCircle, CheckCircle, Mail } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { FaUser } from 'react-icons/fa';
-import { useNavigate } from 'react-router-dom';
-
 
 const RegisterPage = () => {
-    const navigate = useNavigate();
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     username: '',
     email: '',
@@ -17,6 +15,14 @@ const RegisterPage = () => {
   const [errors, setErrors] = useState({});
   const [isDarkMode, setIsDarkMode] = useState(true);
   const [loginStatus, setLoginStatus] = useState(null);
+
+  useEffect(() => {
+    const isAuthenticated = localStorage.getItem('isAuthenticated');
+    if (isAuthenticated) {
+      window.history.pushState(null, '', window.location.href);
+      navigate('/dashboard', { replace: true });
+    }
+  }, [navigate]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -44,7 +50,7 @@ const RegisterPage = () => {
 
     if (!formData.password) {
       newErrors.password = 'Password is required';
-    } else if (formData.password.length < 8) {
+    } else if (formData.password.length < 6) {
       newErrors.password = 'Password must be at least 6 characters';
     }
 
@@ -54,50 +60,49 @@ const RegisterPage = () => {
       newErrors.email = 'Email is invalid';
     }
 
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async () => {
-      if (!validateForm()) return;
+    if (!validateForm()) return;
 
-      setIsLoading(true);
-      setLoginStatus(null);
+    setIsLoading(true);
+    setLoginStatus(null);
 
-      try {
-        const response = await fetch('http://localhost:8080/api/users/register', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(formData),
-        });
+    try {
+      const response = await fetch('http://localhost:8080/api/users/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
 
-        const result = await response.json();
+      const result = await response.json();
 
-        if (!response.ok) {
-          throw new Error(result.message || 'Registration failed');
-        }
-
-        setLoginStatus('success');
-
-        // Show success message for 1.5 seconds, then redirect:
-        setTimeout(() => {
-          setLoginStatus(null);
-          setIsLoading(false);
-          navigate('/dashboard', { replace: true });
-        }, 1500);
-
-      } catch (error) {
-        setLoginStatus('error');
-        setErrors({
-          general: error.message || 'Registration failed. Please try again.',
-        });
-        setIsLoading(false);
+      if (!response.ok) {
+        throw new Error(result.message || 'Registration failed');
       }
-    };
 
+      setLoginStatus('success');
+      localStorage.setItem('isAuthenticated', 'true');
+
+      setTimeout(() => {
+        setLoginStatus(null);
+        setIsLoading(false);
+        window.history.pushState(null, '', window.location.href);
+        navigate('/dashboard', { replace: true });
+      }, 1500);
+
+    } catch (error) {
+      setLoginStatus('error');
+      setErrors({
+        general: error.message || 'Registration failed. Please try again.',
+      });
+      setIsLoading(false);
+    }
+  };
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);

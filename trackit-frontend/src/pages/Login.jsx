@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Eye, EyeOff, User, Lock, LogIn, AlertCircle, CheckCircle } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 const LoginPage = () => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     username: '',
     password: ''
@@ -12,6 +13,14 @@ const LoginPage = () => {
   const [errors, setErrors] = useState({});
   const [isDarkMode, setIsDarkMode] = useState(true);
   const [loginStatus, setLoginStatus] = useState(null);
+
+  useEffect(() => {
+    const token = localStorage.getItem('authToken');
+    if (token) {
+      window.history.pushState(null, '', window.location.href);
+      navigate('/dashboard', { replace: true });
+    }
+  }, [navigate]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -39,7 +48,7 @@ const LoginPage = () => {
 
     if (!formData.password) {
       newErrors.password = 'Password is required';
-    } else if (formData.password.length < 8) {
+    } else if (formData.password.length < 6) {
       newErrors.password = 'Password must be at least 6 characters';
     }
 
@@ -52,21 +61,56 @@ const LoginPage = () => {
 
     setIsLoading(true);
     setLoginStatus(null);
+    setErrors({}); // Clear previous errors
 
     try {
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      const response = await fetch('http://localhost:8080/api/users/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      // Handle different response types
+      if (!response.ok) {
+        let errorMessage = 'Login failed';
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error || errorData.message || errorMessage;
+        } catch {
+          // If response is not JSON, use status text
+          errorMessage = response.statusText || errorMessage;
+        }
+        throw new Error(errorMessage);
+      }
+
+      // Parse the successful response
+      const result = await response.json();
+
+      // Store authentication data
+      if (result.token) {
+        localStorage.setItem('authToken', result.token);
+        localStorage.setItem('tokenType', result.tokenType || 'Bearer');
+        localStorage.setItem('userId', result.userId?.toString() || '');
+        localStorage.setItem('username', result.username || '');
+        localStorage.setItem('isAuthenticated', 'true');
+      }
+
       setLoginStatus('success');
 
       setTimeout(() => {
-        alert('Login successful! In a real app, you would redirect to dashboard.');
         setLoginStatus(null);
         setIsLoading(false);
+        window.history.pushState(null, '', window.location.href);
+        navigate('/dashboard', { replace: true });
       }, 1500);
 
     } catch (error) {
+      console.error('Login error:', error);
       setLoginStatus('error');
       setErrors({
-        general: 'Login failed. Please try again.'
+        general: error.message || 'Login failed. Please try again.',
       });
       setIsLoading(false);
     }

@@ -14,6 +14,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 @RestController
@@ -49,7 +51,7 @@ public class UserController {
     public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
         User user = userService.login(loginRequest.getUsername(), loginRequest.getPassword());
         if (user == null) {
-            return ResponseEntity.status(401).body("Invalid Credentials");
+            return ResponseEntity.status(401).body(Map.of("error", "Invalid Credentials"));
         }
 
         // Create UserDetails (CustomUserDetails) from User
@@ -58,7 +60,17 @@ public class UserController {
         // Generate token using UserDetails
         String token = jwtUtil.generateToken(customUserDetails);
 
-        return ResponseEntity.ok().body("Bearer " + token);
+        // Return JSON response with token
+        Map<String, Object> response = new HashMap<>();
+        response.put("token", token);
+        response.put("tokenType", "Bearer");
+        response.put("user", Map.of(
+                "id", user.getId(),
+                "username", user.getUsername()
+                // Add other user fields you want to return
+        ));
+
+        return ResponseEntity.ok().body(response);
     }
 
     @GetMapping("/profile")
