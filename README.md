@@ -1,48 +1,21 @@
-#Trackit-Productivity-Task-Manager-
+# Frontend Branch - Track It
 
-A Spring Boot backend for managing user tasks with JWT-based authentication, task scheduling, and repeatable task logic.
+This branch contains the frontend work for the project, including:
 
-🚀 TrackIt Backend
-This is the backend service for TrackIt, a task management application built with Spring Boot. It provides a set of secure and well-structured REST APIs for:
+- User registration
+- User login
+- Dashboard navigation with browser history handling to prevent back navigation after login/register
 
-🔐 User registration and login using JWT authentication
+## Features
 
-✅ Task creation, completion, update, and deletion
+- Registration and login forms with validation
+- After successful login/register, users are redirected to the dashboard
+- Users cannot go back to the login or register pages using the browser back button once authenticated
+- Clean navigation flow mimicking a real-world application behavior
 
-📅 Daily and historical task listing with repeat logic
+## How to Run
 
-🔎 Task history filtering by custom date ranges
-
-🛡️ Secure access to endpoints via token-based authorization
-
-✅ Features
-JWT-based Authentication: Secure login and user identification.
-
-Task Management:
-
-✅ Create Task (supports due date, priority, repeat type)
-
-📋 View All Tasks (mapped to the logged-in user)
-
-📅 View Today’s Tasks (includes tasks with repeat logic)
-
-🔄 View Task History (filter by custom date ranges)
-
-☑️ Mark Task as Complete
-
-🗑️ Delete Task
-
-✏️ Update Task
-
-Robust API Design: Clean and RESTful structure for easy integration with any frontend.
-
-🧰 Tech Stack
-Java 17+
-
-Spring Boot
-
-Spring Security
-
-JWT (via jjwt)
-
-Database: MySQL
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/your-username/your-repo.git
+   cd your-repo
