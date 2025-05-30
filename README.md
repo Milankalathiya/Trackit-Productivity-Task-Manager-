@@ -1,4 +1,5 @@
 📦 TrackIt - Task and Habit Tracker (Mini Project)
+
 TrackIt is a full-stack Task and Habit Tracker application developed as a Semester 3 college mini-project. It consists of a Spring Boot backend with secure user authentication, task management, habit tracking, and analytics, paired with a frontend for user interaction. The main branch combines both backend and frontend for a complete application.
 
 ✅ Project Overview
