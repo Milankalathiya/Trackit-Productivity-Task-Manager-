@@ -1,13 +1,13 @@
 package com.trackit.config;
 
-import com.trackit.security.JwtAuthenticationFilter;
-import com.trackit.security.CustomUserDetailsService;
-import com.trackit.security.JwtUtil;
+import java.util.List;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -16,9 +16,13 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import java.util.List;
+
+import com.trackit.security.CustomUserDetailsService;
+import com.trackit.security.JwtAuthenticationFilter;
+import com.trackit.security.JwtUtil;
 
 @Configuration
+@EnableWebSecurity
 public class SecurityConfig {
 
     private final CustomUserDetailsService userDetailsService;
@@ -31,29 +35,29 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http.cors() // 👈 Add this line
-                .and()
-                .csrf().disable()
-                .authorizeRequests()
-                .requestMatchers("/api/users/register", "/api/users/login").permitAll()
-                .requestMatchers("/api/users/profile").authenticated()
-                .requestMatchers("/api/habits/**").authenticated()
-                .anyRequest().authenticated()
-                .and()
-                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+        http
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .csrf(csrf -> csrf.disable())
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/api/users/register", "/api/users/login").permitAll()
+                        .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
+                        .requestMatchers("/api/users/profile").authenticated()
+                        .requestMatchers("/api/habits/**").authenticated()
+                        .requestMatchers("/api/tasks/**").authenticated()
+                        .requestMatchers("/api/analytics/**").authenticated()
+                        .anyRequest().authenticated())
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
-        // Add JWT filter before the UsernamePasswordAuthenticationFilter
-        http.addFilterBefore(new JwtAuthenticationFilter(jwtUtil, userDetailsService), UsernamePasswordAuthenticationFilter.class);
+        // Re-enable JWT filter with proper configuration
+        http.addFilterBefore(new JwtAuthenticationFilter(jwtUtil, userDetailsService),
+                UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
 
     @Bean
-    public AuthenticationManager authManager(HttpSecurity http) throws Exception {
-        return http.getSharedObject(AuthenticationManagerBuilder.class)
-                .userDetailsService(userDetailsService)
-                .passwordEncoder(passwordEncoder())
-                .and().build();
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
+        return authConfig.getAuthenticationManager();
     }
 
     @Bean
@@ -73,5 +77,4 @@ public class SecurityConfig {
         source.registerCorsConfiguration("/**", configuration);
         return source;
     }
-
 }

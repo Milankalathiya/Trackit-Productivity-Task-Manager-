@@ -1,16 +1,16 @@
 package com.trackit.security;
 
-import org.springframework.security.core.context.SecurityContextHolder;
+import java.io.IOException;
+
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.web.filter.OncePerRequestFilter;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.web.filter.OncePerRequestFilter;
-
-import java.io.IOException;
 
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
@@ -26,25 +26,41 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
 
-        String authorizationHeader = request.getHeader("Authorization");
+        // Skip JWT processing for login and register endpoints
+        String requestURI = request.getRequestURI();
+        if (requestURI.equals("/api/users/login") || requestURI.equals("/api/users/register")) {
+            System.out.println("Skipping JWT filter for: " + requestURI);
+            filterChain.doFilter(request, response);
+            return;
+        }
 
-        if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
-            String token = authorizationHeader.substring(7); // Remove "Bearer " part
+        try {
+            String authorizationHeader = request.getHeader("Authorization");
+            System.out.println("Authorization Header: " + authorizationHeader);
 
-            String username = jwtUtil.extractUsername(token);
+            if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
+                String token = authorizationHeader.substring(7); // Remove "Bearer " part
 
-            if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                // Load UserDetails (CustomUserDetails)
-                UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+                String username = jwtUtil.extractUsername(token);
+                System.out.println("Extracted username from JWT: " + username);
 
-                // Check if the token is valid using UserDetails
-                if (jwtUtil.isTokenValid(token, userDetails)) {
-                    UsernamePasswordAuthenticationToken authentication =
-                            new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+                if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                    // Load UserDetails (CustomUserDetails)
+                    UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+                    System.out.println("User loaded: " + userDetails.getUsername());
 
-                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                    // Check if the token is valid using UserDetails
+                    if (jwtUtil.isTokenValid(token, userDetails)) {
+                        System.out.println("Token valid: " + jwtUtil.isTokenValid(token, userDetails));
+                        UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                                userDetails, null, userDetails.getAuthorities());
+                        SecurityContextHolder.getContext().setAuthentication(authToken);
+                    }
                 }
             }
+        } catch (Exception e) {
+            System.err.println("Error in JWT filter: " + e.getMessage());
+            // Don't throw exception, just continue with the filter chain
         }
 
         filterChain.doFilter(request, response);

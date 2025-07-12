@@ -6,18 +6,20 @@ import io.jsonwebtoken.SignatureAlgorithm;
 
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
-import lombok.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 import java.security.Key;
 import java.util.Date;
 import java.util.function.Function;
+import org.springframework.beans.factory.annotation.Value;
+
 
 @Component
 public class JwtUtil {
 
-    private final String SECRET = "a2FkbmZqamRzZnh1b2hzaGZkamZzaGprZHNmc2hrZGZqZg==";
+    @Value("${jwt.secret}")
+    private String SECRET;
 
 
     // move to application.properties/env
@@ -41,6 +43,7 @@ public class JwtUtil {
 
     public Boolean isTokenValid(String token, UserDetails userDetails) {
         final String username = extractUsername(token);
+
         return username.equals(userDetails.getUsername()) && !isTokenExpired(token);
     }
 

@@ -1,22 +1,28 @@
 package com.trackit.controller;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.trackit.dto.LoginRequest;
 import com.trackit.model.User;
 import com.trackit.repository.UserRepository;
 import com.trackit.security.CustomUserDetails;
 import com.trackit.security.JwtUtil;
 import com.trackit.service.UserService;
-import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api/users")
@@ -33,32 +39,39 @@ public class UserController {
 
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody User user) {
-        System.out.println("Received password: " + user.getPassword());
         if (userRepository.findByUsername(user.getUsername()).isPresent()) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body("Username already exists");
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(Map.of("message", "Username already exists"));
         }
 
-        if (user.getPassword() == null) {
-            return ResponseEntity.badRequest().body("Password cannot be null");
+        if (user.getPassword() == null || user.getPassword().isEmpty()) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("message", "Password cannot be empty"));
         }
 
-        user.setPassword(passwordEncoder.encode(user.getPassword())); // 🔐 hash password
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
         User savedUser = userRepository.save(user);
-        return ResponseEntity.ok(savedUser); // password will be hidden due to @JsonIgnore
+        return ResponseEntity.ok(savedUser);
     }
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
+        System.out.println("Login attempt for username: " + loginRequest.getUsername());
+
         User user = userService.login(loginRequest.getUsername(), loginRequest.getPassword());
         if (user == null) {
+            System.out.println("Login failed - invalid credentials");
             return ResponseEntity.status(401).body(Map.of("error", "Invalid Credentials"));
         }
+
+        System.out.println("Login successful for user: " + user.getUsername());
 
         // Create UserDetails (CustomUserDetails) from User
         CustomUserDetails customUserDetails = new CustomUserDetails(user);
 
         // Generate token using UserDetails
         String token = jwtUtil.generateToken(customUserDetails);
+        System.out.println("Generated JWT token: " + token);
 
         // Return JSON response with token
         Map<String, Object> response = new HashMap<>();
@@ -67,7 +80,7 @@ public class UserController {
         response.put("user", Map.of(
                 "id", user.getId(),
                 "username", user.getUsername()
-                // Add other user fields you want to return
+        // Add other user fields you want to return
         ));
 
         return ResponseEntity.ok().body(response);
@@ -85,7 +98,5 @@ public class UserController {
             return ResponseEntity.notFound().build();
         }
     }
-
-
 
 }

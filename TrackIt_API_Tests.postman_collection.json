@@ -1,0 +1,380 @@
+{
+  "info": {
+    "name": "TrackIt API Tests",
+    "description": "Comprehensive API testing for the enhanced TrackIt backend",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080/api",
+      "type": "string"
+    },
+    {
+      "key": "authToken",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{authToken}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Register User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"testuser\",\n  \"email\": \"test@example.com\",\n  \"password\": \"password123\",\n  \"firstName\": \"Test\",\n  \"lastName\": \"User\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/users/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "register"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Login User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    pm.collectionVariables.set('authToken', response.token);",
+                  "    console.log('Token saved:', response.token);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"testuser\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/users/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "login"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get User Profile",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users/profile",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "profile"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Task Management",
+      "item": [
+        {
+          "name": "Create Task",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Complete Project Documentation\",\n  \"description\": \"Write comprehensive documentation for the TrackIt project\",\n  \"dueDate\": \"2024-01-15\",\n  \"priority\": \"HIGH\",\n  \"repeatType\": \"NONE\",\n  \"category\": \"Work\",\n  \"estimatedHours\": 4,\n  \"actualHours\": null\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/tasks",
+              "host": ["{{baseUrl}}"],
+              "path": ["tasks"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Tasks",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tasks",
+              "host": ["{{baseUrl}}"],
+              "path": ["tasks"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Today's Tasks",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tasks/today",
+              "host": ["{{baseUrl}}"],
+              "path": ["tasks", "today"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Overdue Tasks",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tasks/overdue",
+              "host": ["{{baseUrl}}"],
+              "path": ["tasks", "overdue"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Upcoming Tasks",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tasks/upcoming?days=7",
+              "host": ["{{baseUrl}}"],
+              "path": ["tasks", "upcoming"],
+              "query": [
+                {
+                  "key": "days",
+                  "value": "7"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Tasks by Category",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tasks/category/Work",
+              "host": ["{{baseUrl}}"],
+              "path": ["tasks", "category", "Work"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Tasks by Priority",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tasks/priority/HIGH",
+              "host": ["{{baseUrl}}"],
+              "path": ["tasks", "priority", "HIGH"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Mark Task Complete",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tasks/1/complete",
+              "host": ["{{baseUrl}}"],
+              "path": ["tasks", "1", "complete"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Mark Task Incomplete",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tasks/1/incomplete",
+              "host": ["{{baseUrl}}"],
+              "path": ["tasks", "1", "incomplete"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Task",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Updated Task Title\",\n  \"description\": \"Updated description\",\n  \"dueDate\": \"2024-01-20\",\n  \"priority\": \"MEDIUM\",\n  \"repeatType\": \"WEEKLY\",\n  \"category\": \"Personal\",\n  \"estimatedHours\": 6,\n  \"actualHours\": 3\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/tasks/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["tasks", "1"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Archive Task",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tasks/1/archive",
+              "host": ["{{baseUrl}}"],
+              "path": ["tasks", "1", "archive"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Task",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tasks/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["tasks", "1"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Task Analytics",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tasks/analytics",
+              "host": ["{{baseUrl}}"],
+              "path": ["tasks", "analytics"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Task Categories",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tasks/categories",
+              "host": ["{{baseUrl}}"],
+              "path": ["tasks", "categories"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Error Testing",
+      "item": [
+        {
+          "name": "Create Task - Invalid Data",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"\",\n  \"dueDate\": \"invalid-date\",\n  \"priority\": \"INVALID\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/tasks",
+              "host": ["{{baseUrl}}"],
+              "path": ["tasks"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Non-existent Task",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tasks/999999",
+              "host": ["{{baseUrl}}"],
+              "path": ["tasks", "999999"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Task - Unauthorized",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Unauthorized Update\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/tasks/999999",
+              "host": ["{{baseUrl}}"],
+              "path": ["tasks", "999999"]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
