@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.trackit.dto.HabitWithStreakDTO;
 import com.trackit.model.Habit;
 import com.trackit.model.User;
 import com.trackit.repository.UserRepository;
@@ -55,11 +56,11 @@ public class HabitController {
 
 
     @GetMapping
-    public ResponseEntity<List<Habit>> getHabits(Principal principal) {
+    public ResponseEntity<List<HabitWithStreakDTO>> getHabits(Principal principal) {
         User user = userRepository.findByUsername(principal.getName())
                 .orElseThrow(() -> new RuntimeException("User not found: " + principal.getName()));
 
-        return ResponseEntity.ok(habitService.getHabits(user)); // match the method signature
+        return ResponseEntity.ok(habitService.getHabitsWithStreak(user));
     }
 
 

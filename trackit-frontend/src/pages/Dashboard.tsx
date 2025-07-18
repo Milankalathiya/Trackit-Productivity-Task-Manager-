@@ -2,6 +2,7 @@ import TaskIcon from '@mui/icons-material/Assignment';
 import HabitIcon from '@mui/icons-material/Loop';
 import PendingIcon from '@mui/icons-material/Schedule';
 import AnalyticsIcon from '@mui/icons-material/TrendingUp';
+import LocalFireDepartmentIcon from '@mui/icons-material/LocalFireDepartment';
 import {
   Alert,
   Avatar,
@@ -43,6 +44,10 @@ const Dashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [barChartData, setBarChartData] = useState<any[]>([]);
+  const [maxStreak, setMaxStreak] = useState(0);
+  const [habitStreak, setHabitStreak] = useState(0);
+  const [taskStreak, setTaskStreak] = useState(0);
+  const [totalStreak, setTotalStreak] = useState(0);
   const { user } = useAuth();
 
   const loadDashboardData = useCallback(async () => {
@@ -61,11 +66,12 @@ const Dashboard: React.FC = () => {
         pendingTasks: todayTasks.length,
         overdueTasks: overdueTasks.length,
         totalHabits: habits.length,
-        completedHabits: habits.filter((h: any) => h.currentStreak > 0).length,
+        completedHabits: habits.filter((h: any) => h.streak > 0).length,
         completionRate: taskAnalytics.completionRate || 0,
       });
       setRecentTasks(todayTasks.slice(0, 5));
       setRecentHabits(habits.slice(0, 5));
+      setMaxStreak(habits.length > 0 ? Math.max(...habits.map((h: any) => h.streak || 0)) : 0);
     } catch (err: any) {
       setError('Error loading dashboard data');
     } finally {
@@ -81,6 +87,26 @@ const Dashboard: React.FC = () => {
       refetchDashboard = null;
     };
   }, [loadDashboardData]);
+
+  useEffect(() => {
+    // Fetch both streaks and sum them
+    const fetchStreaks = async () => {
+      try {
+        const [habit, task] = await Promise.all([
+          habitService.getHabitStreak(),
+          taskService.getTaskStreak(),
+        ]);
+        setHabitStreak(habit);
+        setTaskStreak(task);
+        setTotalStreak(habit + task);
+      } catch (e) {
+        setHabitStreak(0);
+        setTaskStreak(0);
+        setTotalStreak(0);
+      }
+    };
+    fetchStreaks();
+  }, []);
 
   const loadWeeklyChartData = async () => {
     try {
@@ -132,14 +158,35 @@ const Dashboard: React.FC = () => {
   return (
     <Box sx={{ flexGrow: 1, p: { xs: 1, md: 3 } }}>
       {/* Welcome Section */}
-      <Box sx={{ mb: 4 }}>
-        <Typography variant="h4" fontWeight={700} gutterBottom>
-          Welcome back, {user?.username}!
-        </Typography>
-        <Typography variant="body1" color="text.secondary">
-          Here's your productivity overview for{' '}
-          {format(new Date(), 'EEEE, MMMM d, yyyy')}
-        </Typography>
+      <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Box>
+          <Typography variant="h4" fontWeight={700} gutterBottom>
+            Welcome back, {user?.username}!
+          </Typography>
+          <Typography variant="body1" color="text.secondary">
+            Here's your productivity overview for{' '}
+            {format(new Date(), 'EEEE, MMMM d, yyyy')}
+          </Typography>
+        </Box>
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            border: '2px solid black',
+            borderRadius: '20px',
+            px: 2,
+            py: 0.5,
+            bgcolor: 'background.paper',
+            fontWeight: 600,
+            fontSize: 18,
+            gap: 1,
+            minWidth: 60,
+            justifyContent: 'center'
+          }}
+        >
+          <LocalFireDepartmentIcon sx={{ color: 'black', fontSize: 24, mr: 0.5 }} />
+          <span style={{ color: 'black' }}>{totalStreak}</span>
+        </Box>
       </Box>
 
       {/* Stats Cards */}

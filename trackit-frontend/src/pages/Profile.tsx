@@ -14,6 +14,7 @@ import {
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useAuth } from '../contexts/AuthContext';
+import { authService } from '../services/authService';
 
 interface ProfileFormData {
   username: string;
@@ -50,8 +51,6 @@ const Profile: React.FC = () => {
     setProfileSuccess(null);
     try {
       // TODO: Implement updateProfile in authService
-      // const updatedUser = await authService.updateProfile(data);
-      // updateUser(updatedUser);
       setProfileSuccess('Profile updated successfully!');
     } catch (error: any) {
       setProfileError(

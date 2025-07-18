@@ -71,30 +71,21 @@ const HabitCard: React.FC<HabitCardProps> = ({
 
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
               <Chip
-                label={`${habit.currentStreak || 0} day streak`}
-                color={getStreakColor(habit.currentStreak || 0)}
+                label={`${habit.streak} day streak`}
+                color={getStreakColor(habit.streak)}
                 size="small"
-                icon={getStreakIcon(habit.currentStreak || 0)}
+                icon={getStreakIcon(habit.streak)}
               />
-
-              {habit.longestStreak &&
-                habit.longestStreak > (habit.currentStreak || 0) && (
-                  <Chip
-                    label={`Best: ${habit.longestStreak} days`}
-                    variant="outlined"
-                    size="small"
-                  />
-                )}
             </Box>
 
-            {habit.currentStreak && habit.currentStreak > 0 && (
+            {habit.streak > 0 && (
               <Box sx={{ mb: 2 }}>
                 <Typography variant="body2" color="text.secondary" gutterBottom>
                   Progress
                 </Typography>
                 <LinearProgress
                   variant="determinate"
-                  value={Math.min((habit.currentStreak / 30) * 100, 100)}
+                  value={Math.min((habit.streak / 30) * 100, 100)}
                   sx={{ height: 8, borderRadius: 4 }}
                 />
               </Box>

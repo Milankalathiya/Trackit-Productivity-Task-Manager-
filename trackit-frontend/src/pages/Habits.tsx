@@ -1,4 +1,6 @@
 import AddIcon from '@mui/icons-material/Add';
+import LocalFireDepartmentIcon from '@mui/icons-material/LocalFireDepartment';
+import NotificationsNoneIcon from '@mui/icons-material/NotificationsNone';
 import {
   Alert,
   Box,
@@ -10,13 +12,22 @@ import {
   DialogTitle,
   Grid,
   Typography,
+  Chip,
+  IconButton,
 } from '@mui/material';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import HabitCard from '../components/habits/HabitCard';
 import HabitForm from '../components/habits/HabitForm';
 import { useHabits } from '../hooks/useHabits';
-import type { Habit, HabitFormData } from '../types';
+import type { Habit } from '../types';
 import { isToday } from 'date-fns';
+import { habitService } from '../services/habitService';
+
+type HabitFormData = {
+  name: string;
+  description?: string;
+  frequency: string;
+};
 
 const Habits: React.FC = () => {
   const {
@@ -31,6 +42,19 @@ const Habits: React.FC = () => {
   const [showDialog, setShowDialog] = useState(false);
   const [editingHabit, setEditingHabit] = useState<Habit | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [habitStreak, setHabitStreak] = useState(0);
+
+  useEffect(() => {
+    const fetchStreak = async () => {
+      try {
+        const streak = await habitService.getHabitStreak();
+        setHabitStreak(streak);
+      } catch (e) {
+        setHabitStreak(0);
+      }
+    };
+    fetchStreak();
+  }, []);
 
   const handleCreateHabit = async (data: HabitFormData) => {
     setSubmitting(true);
@@ -77,6 +101,7 @@ const Habits: React.FC = () => {
 
   const dailyHabits = habits.filter((habit) => habit.frequency === 'DAILY');
   const weeklyHabits = habits.filter((habit) => habit.frequency === 'WEEKLY');
+  const maxStreak = habits.length > 0 ? Math.max(...habits.map((h) => h.streak || 0)) : 0;
 
   return (
     <Box sx={{ p: { xs: 1, md: 3 } }}>
@@ -85,7 +110,7 @@ const Habits: React.FC = () => {
           display: 'flex',
           flexDirection: { xs: 'column', sm: 'row' },
           alignItems: { sm: 'center' },
-          justifyContent: { sm: 'space-between' },
+          justifyContent: 'space-between',
           gap: 2,
           mb: 4,
         }}
@@ -98,13 +123,34 @@ const Habits: React.FC = () => {
             Build better habits and track your progress
           </Typography>
         </Box>
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={() => setShowDialog(true)}
-        >
-          Add Habit
-        </Button>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={() => setShowDialog(true)}
+          >
+            Add Habit
+          </Button>
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              border: '2px solid black',
+              borderRadius: '20px',
+              px: 2,
+              py: 0.5,
+              bgcolor: 'background.paper',
+              fontWeight: 600,
+              fontSize: 18,
+              gap: 1,
+              minWidth: 60,
+              justifyContent: 'center'
+            }}
+          >
+            <LocalFireDepartmentIcon sx={{ color: 'black', fontSize: 24, mr: 0.5 }} />
+            <span style={{ color: 'black' }}>{habitStreak}</span>
+          </Box>
+        </Box>
       </Box>
 
       {loading ? (
@@ -128,13 +174,6 @@ const Habits: React.FC = () => {
           <Typography color="text.secondary" sx={{ mb: 2 }}>
             Start building better habits by creating your first one.
           </Typography>
-          <Button
-            variant="outlined"
-            startIcon={<AddIcon />}
-            onClick={() => setShowDialog(true)}
-          >
-            Create Your First Habit
-          </Button>
         </Box>
       ) : (
         <Box>

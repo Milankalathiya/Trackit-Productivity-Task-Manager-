@@ -117,6 +117,13 @@ public class TaskController {
         return ResponseEntity.ok(tasks);
     }
 
+    @GetMapping("/streak")
+    public ResponseEntity<Map<String, Integer>> getCurrentTaskStreak(@AuthenticationPrincipal CustomUserDetails userDetails) {
+        User user = userService.findById(userDetails.getId());
+        int streak = taskService.getCurrentTaskStreak(user);
+        return ResponseEntity.ok(Map.of("currentStreak", streak));
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<Task> getTaskById(
             @PathVariable Long id,

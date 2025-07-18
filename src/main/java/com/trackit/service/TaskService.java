@@ -195,4 +195,34 @@ public class TaskService {
         log.info("Fetching task categories for user: {}", user.getUsername());
         return taskRepository.findDistinctCategoriesByUser(user);
     }
+
+    /**
+     * Returns the number of consecutive days (up to today) where the user completed at least one task on or before its due date.
+     * The streak stops at the first day with no on-time completion.
+     */
+    public int getCurrentTaskStreak(User user) {
+        int streak = 0;
+        LocalDate today = LocalDate.now();
+        while (true) {
+            LocalDate checkDate = today.minusDays(streak);
+            // Get all tasks due on this day
+            List<Task> tasksDue = taskRepository.findByUserAndDueDateBetween(
+                user,
+                checkDate.atStartOfDay(),
+                checkDate.plusDays(1).atStartOfDay()
+            );
+            // Check if at least one was completed on time
+            boolean onTimeCompleted = tasksDue.stream().anyMatch(task ->
+                task.isCompleted() &&
+                task.getCompletedAt() != null &&
+                !task.getCompletedAt().toLocalDate().isAfter(task.getDueDate().toLocalDate())
+            );
+            if (onTimeCompleted) {
+                streak++;
+            } else {
+                break;
+            }
+        }
+        return streak;
+    }
 }

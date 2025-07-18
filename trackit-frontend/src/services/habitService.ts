@@ -10,6 +10,7 @@ export interface CreateHabitRequest {
 export const habitService = {
   async getAllHabits(): Promise<Habit[]> {
     const response = await api.get('/habits');
+    // The backend now returns HabitWithStreakDTO, which matches the updated Habit type
     return response.data;
   },
 
@@ -43,5 +44,11 @@ export const habitService = {
   async getWeeklyProgress(id: number): Promise<number[]> {
     const response = await api.get(`/habits/${id}/weekly-progress`);
     return response.data;
+  },
+
+  async getHabitStreak(): Promise<number> {
+    const habits = await habitService.getAllHabits();
+    // Return the highest streak among all habits
+    return habits.length > 0 ? Math.max(...habits.map((h: any) => h.streak || 0)) : 0;
   },
 };

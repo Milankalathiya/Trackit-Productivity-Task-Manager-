@@ -9,6 +9,7 @@ import {
   Settings,
   Assignment as TasksIcon,
 } from '@mui/icons-material';
+import SettingsIcon from '@mui/icons-material/Settings';
 import {
   AppBar,
   Avatar,
@@ -43,6 +44,7 @@ interface LayoutProps {
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [profileMenuAnchor, setProfileMenuAnchor] = useState<null | HTMLElement>(null);
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -54,7 +56,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     { text: 'Tasks', icon: <TasksIcon />, path: ROUTES.TASKS },
     { text: 'Habits', icon: <HabitsIcon />, path: ROUTES.HABITS },
     { text: 'Analytics', icon: <AnalyticsIcon />, path: ROUTES.ANALYTICS },
-    { text: 'Profile', icon: <ProfileIcon />, path: ROUTES.PROFILE },
+    // Removed Profile from menu
   ];
 
   const handleDrawerToggle = () => {
@@ -67,6 +69,13 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   const handleMenuClose = () => {
     setAnchorEl(null);
+  };
+
+  const handleProfileMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+    setProfileMenuAnchor(event.currentTarget);
+  };
+  const handleProfileMenuClose = () => {
+    setProfileMenuAnchor(null);
   };
 
   const handleLogout = () => {
@@ -155,38 +164,33 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         ))}
       </List>
 
-      {/* User Profile Section */}
-      <Box sx={{ p: 2, borderTop: 1, borderColor: 'divider' }}>
-        <Box
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-            p: 2,
-            borderRadius: 2,
-            backgroundColor: 'background.paper',
-            cursor: 'pointer',
-          }}
-          onClick={handleMenuOpen}
-        >
+      {/* User Profile Section at bottom */}
+      <Box sx={{ p: 2, borderTop: 1, borderColor: 'divider', mt: 'auto' }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', gap: 1, cursor: 'pointer' }} onClick={handleProfileMenuOpen}>
           <Avatar
             sx={{
               width: 40,
               height: 40,
-              mr: 2,
               backgroundColor: 'primary.main',
             }}
           >
             {user?.username?.charAt(0).toUpperCase()}
           </Avatar>
-          <Box sx={{ flexGrow: 1 }}>
-            <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-              {user?.username}
-            </Typography>
-            <Typography variant="caption" color="text.secondary">
-              {user?.email}
-            </Typography>
-          </Box>
+          <Typography variant="subtitle2" sx={{ fontWeight: 600, ml: 1 }}>
+            {user?.username || 'User'}
+          </Typography>
         </Box>
+        <Menu anchorEl={profileMenuAnchor} open={Boolean(profileMenuAnchor)} onClose={handleProfileMenuClose}>
+          <MenuItem onClick={() => { handleProfile(); handleProfileMenuClose(); }}>
+            <ProfileIcon sx={{ mr: 1 }} /> Profile
+          </MenuItem>
+          <MenuItem onClick={handleProfileMenuClose}>
+            <SettingsIcon sx={{ mr: 1 }} /> Settings
+          </MenuItem>
+          <MenuItem onClick={() => { handleLogout(); handleProfileMenuClose(); }}>
+            <Logout sx={{ mr: 1 }} /> Logout
+          </MenuItem>
+        </Menu>
       </Box>
     </Box>
   );

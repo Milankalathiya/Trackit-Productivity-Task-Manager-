@@ -1,4 +1,5 @@
 import AddIcon from '@mui/icons-material/Add';
+import LocalFireDepartmentIcon from '@mui/icons-material/LocalFireDepartment';
 import {
   Alert,
   Box,
@@ -14,12 +15,13 @@ import {
   Tabs,
   Typography,
 } from '@mui/material';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import TaskCard from '../components/tasks/TaskCard';
 import TaskForm from '../components/tasks/TaskForm';
 import { useTasks } from '../hooks/useTasks';
 import type { Task, TaskRequest } from '../types';
 import { refetchDashboard } from './Dashboard';
+import { taskService } from '../services/taskService';
 
 const Tasks: React.FC = () => {
   const {
@@ -37,6 +39,19 @@ const Tasks: React.FC = () => {
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [snackbar, setSnackbar] = useState<string | null>(null);
+  const [taskStreak, setTaskStreak] = useState(0);
+
+  useEffect(() => {
+    const fetchStreak = async () => {
+      try {
+        const streak = await taskService.getTaskStreak();
+        setTaskStreak(streak);
+      } catch (e) {
+        setTaskStreak(0);
+      }
+    };
+    fetchStreak();
+  }, []);
 
   const handleTabChange = (_: React.SyntheticEvent, newValue: number) => {
     setTab(newValue);
@@ -83,12 +98,11 @@ const Tasks: React.FC = () => {
     }
   };
 
-  const handleToggleComplete = async (task: Task) => {
-    await toggleTaskComplete(task.id);
-    setSnackbar(task.completed ? 'Task marked incomplete' : 'Task completed!');
+  const handleToggleComplete = async (taskId: number) => {
+    await toggleTaskComplete(taskId);
+    setSnackbar('Task completed!');
     await refetch();
     if (refetchDashboard) refetchDashboard();
-    window.location.reload(); // Force reload for diagnostic
   };
 
   const handleDelete = async (taskId: number) => {
@@ -109,13 +123,34 @@ const Tasks: React.FC = () => {
         <Typography variant="h4" fontWeight={700}>
           Tasks
         </Typography>
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={() => handleOpenDialog()}
-        >
-          Add Task
-        </Button>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={() => handleOpenDialog()}
+          >
+            Add Task
+          </Button>
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              border: '2px solid black',
+              borderRadius: '20px',
+              px: 2,
+              py: 0.5,
+              bgcolor: 'background.paper',
+              fontWeight: 600,
+              fontSize: 18,
+              gap: 1,
+              minWidth: 60,
+              justifyContent: 'center'
+            }}
+          >
+            <LocalFireDepartmentIcon sx={{ color: 'black', fontSize: 24, mr: 0.5 }} />
+            <span style={{ color: 'black' }}>{taskStreak}</span>
+          </Box>
+        </Box>
       </Box>
       <Tabs value={tab} onChange={handleTabChange} sx={{ mb: 3 }}>
         <Tab label="All" />
@@ -148,12 +183,12 @@ const Tasks: React.FC = () => {
       ) : (
         <Grid container spacing={2}>
           {filteredTasks.map((task) => (
-            <Grid item xs={12} md={6} key={task.id}>
+            <Grid item xs={12} md={4} key={task.id}>
               <TaskCard
                 task={task}
                 onEdit={handleOpenDialog}
                 onDelete={handleDelete}
-                onToggleComplete={handleToggleComplete}
+                onToggleComplete={(taskId) => handleToggleComplete(tasks.find(t => t.id === taskId)!.id)}
                 onToggleExpand={undefined}
                 expanded={false}
               />

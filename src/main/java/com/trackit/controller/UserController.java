@@ -11,6 +11,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -99,4 +100,24 @@ public class UserController {
         }
     }
 
+    @PutMapping("/profile")
+    public ResponseEntity<User> updateProfile(Authentication authentication, @RequestBody Map<String, Object> updates) {
+        String username = authentication.getName();
+        Optional<User> optionalUser = userService.findByUsername(username);
+
+        if (optionalUser.isPresent()) {
+            User user = optionalUser.get();
+            if (updates.containsKey("username")) {
+                user.setUsername((String) updates.get("username"));
+            }
+            if (updates.containsKey("email")) {
+                user.setEmail((String) updates.get("email"));
+            }
+            // Add more fields as needed
+            userRepository.save(user);
+            return ResponseEntity.ok(user);
+        } else {
+            return ResponseEntity.notFound().build();
+        }
+    }
 }

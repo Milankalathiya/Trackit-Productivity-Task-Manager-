@@ -17,6 +17,7 @@ import Dashboard from './pages/Dashboard';
 import Habits from './pages/Habits';
 import Profile from './pages/Profile';
 import Tasks from './pages/Tasks';
+import NotificationButton from './components/common/NotificationButton';
 import { ROUTES } from './utils/constants';
 
 // Create a modern Material Design theme
@@ -201,6 +202,7 @@ function App() {
                 },
               }}
             />
+            <NotificationButton />
           </div>
         </Router>
       </AuthProvider>

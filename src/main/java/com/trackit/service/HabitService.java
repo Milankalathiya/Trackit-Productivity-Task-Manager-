@@ -1,11 +1,13 @@
 package com.trackit.service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import com.trackit.dto.HabitWithStreakDTO;
 import com.trackit.model.Habit;
 import com.trackit.model.User;
 import com.trackit.repository.HabitRepository;
@@ -15,10 +17,12 @@ import com.trackit.repository.UserRepository;
 public class HabitService {
     private final HabitRepository habitRepo;
     private final UserRepository userRepo;
+    private final HabitLogService habitLogService;
 
-    public HabitService(HabitRepository habitRepo, UserRepository userRepo){
+    public HabitService(HabitRepository habitRepo, UserRepository userRepo, HabitLogService habitLogService){
         this.habitRepo = habitRepo;
         this.userRepo = userRepo;
+        this.habitLogService = habitLogService;
     }
 
     public Habit addHabit(Habit habit) {
@@ -31,6 +35,13 @@ public class HabitService {
 
     public List<Habit> getHabits(User user) {
         return habitRepo.findByUser(user);
+    }
+
+    public List<HabitWithStreakDTO> getHabitsWithStreak(User user) {
+        List<Habit> habits = habitRepo.findByUser(user);
+        return habits.stream()
+                .map(habit -> new HabitWithStreakDTO(habit, habitLogService.getCurrentStreak(habit)))
+                .collect(Collectors.toList());
     }
 
     public void deleteHabit(Long habitId, User user) {

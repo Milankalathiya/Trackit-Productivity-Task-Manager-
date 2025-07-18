@@ -109,6 +109,11 @@ class TaskService {
     const response = await api.get('/tasks/categories');
     return response.data;
   }
+
+  async getTaskStreak(): Promise<number> {
+    const response = await api.get('/tasks/streak');
+    return response.data.currentStreak;
+  }
 }
 
 export const taskService = new TaskService();

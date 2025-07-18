@@ -18,9 +18,11 @@ import {
   IconButton,
   Tooltip,
   Typography,
+  Menu,
+  MenuItem,
 } from '@mui/material';
 import { format } from 'date-fns';
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import type { Task } from '../../types';
 
 interface TaskCardProps {
@@ -31,6 +33,12 @@ interface TaskCardProps {
   expanded?: boolean;
   onToggleExpand?: () => void;
 }
+
+const statusOptions = [
+  { value: 'TODO', label: 'To-Do', sx: { bgcolor: '#e0e0e0', color: 'black', border: '1.5px solid #bdbdbd' } },
+  { value: 'IN_PROGRESS', label: 'In Progress', sx: { bgcolor: '#e3f2fd', color: '#1976d2', border: '1.5px solid #1976d2' } },
+  { value: 'DONE', label: 'Done', sx: { bgcolor: '#e8f5e9', color: '#388e3c', border: '1.5px solid #388e3c' } },
+];
 
 const TaskCard: React.FC<TaskCardProps> = ({
   task,
@@ -64,24 +72,45 @@ const TaskCard: React.FC<TaskCardProps> = ({
 
   const isOverdue = new Date(task.dueDate) < new Date() && !task.completed;
 
+  // Status dropdown state
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [status, setStatus] = useState(task.completed ? 'DONE' : (task.status || 'TODO'));
+
+  useEffect(() => {
+    setStatus(task.completed ? 'DONE' : (task.status || 'TODO'));
+  }, [task.completed, task.status]);
+  const handleStatusClick = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+  const handleStatusClose = () => {
+    setAnchorEl(null);
+  };
+  const handleStatusChange = (option: string) => {
+    setStatus(option);
+    setAnchorEl(null);
+    // Optionally, call a prop to update status in backend
+    if (option === 'DONE') onToggleComplete(task.id);
+    // You can add more logic for other statuses if needed
+  };
+
   return (
     <Card
       sx={{
         mb: 2,
         border: isOverdue ? '2px solid #f44336' : '1px solid #e0e0e0',
-        backgroundColor: task.completed ? '#f5f5f5' : 'white',
+        backgroundColor: 'white',
+        boxShadow: 2,
+        borderRadius: 3,
+        transition: 'box-shadow 0.2s',
+        '&:hover': { boxShadow: 6 },
+        minHeight: 220,
+        display: 'flex',
+        flexDirection: 'column',
       }}
     >
-      <CardContent>
+      <CardContent sx={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
         <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
-          <Checkbox
-            checked={task.completed}
-            onChange={() => onToggleComplete(task.id)}
-            icon={<CheckCircle />}
-            checkedIcon={<CheckCircle color="success" />}
-            sx={{ mt: 0 }}
-          />
-
+          {/* Remove status dropdown from here */}
           <Box sx={{ flexGrow: 1, minWidth: 0 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
               <Typography
@@ -187,6 +216,30 @@ const TaskCard: React.FC<TaskCardProps> = ({
               </IconButton>
             </Tooltip>
           </Box>
+        </Box>
+        {/* Status Dropdown at bottom-right */}
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
+          <Chip
+            label={statusOptions.find(opt => opt.value === status)?.label || 'To-Do'}
+            onClick={handleStatusClick}
+            sx={{
+              cursor: 'pointer',
+              fontWeight: 600,
+              fontSize: 16,
+              px: 2,
+              py: 0.5,
+              borderRadius: '6px',
+              minWidth: 140,
+              ...statusOptions.find(opt => opt.value === status)?.sx,
+            }}
+          />
+          <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleStatusClose} MenuListProps={{ sx: { p: 0 } }}>
+            {statusOptions.map((opt) => (
+              <MenuItem key={opt.value} onClick={() => handleStatusChange(opt.value)} sx={{ p: 0, mb: 0, minWidth: 140, width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Chip label={opt.label} sx={{ ...opt.sx, fontWeight: 600, fontSize: 16, px: 2, py: 0.5, borderRadius: '6px', minWidth: 140, width: '100%', border: 'none' }} />
+              </MenuItem>
+            ))}
+          </Menu>
         </Box>
       </CardContent>
     </Card>
