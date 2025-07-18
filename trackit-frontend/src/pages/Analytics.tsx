@@ -36,20 +36,23 @@ const AnalyticsPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [dateRange, setDateRange] = useState(7);
+  const [bestWorstDays, setBestWorstDays] = useState<any | null>(null);
 
   useEffect(() => {
     const fetchAnalytics = async () => {
       setLoading(true);
       setError(null);
       try {
-        const [analyticsData, taskData, habitData] = await Promise.all([
+        const [analyticsData, taskData, habitData, bestWorst] = await Promise.all([
           analyticsService.getAnalytics(),
           analyticsService.getTaskCompletion(dateRange),
           analyticsService.getHabitConsistency(dateRange),
+          analyticsService.getBestWorstDays(dateRange),
         ]);
         setAnalytics(analyticsData);
         setTaskCompletion(taskData);
         setHabitConsistency(habitData);
+        setBestWorstDays(bestWorst);
       } catch (err: any) {
         setError('Failed to fetch analytics');
       } finally {
@@ -272,58 +275,33 @@ const AnalyticsPage: React.FC = () => {
           </Paper>
         </Grid>
       </Grid>
-      <Grid container spacing={3} sx={{ mt: 4 }}>
-        {analytics?.bestDay && (
+      {/* Best/Worst Day Cards */}
+      {bestWorstDays && (
+        <Grid container spacing={2} sx={{ mt: 2 }}>
           <Grid item xs={12} md={6}>
-            <Paper
-              sx={{
-                p: 3,
-                background: 'linear-gradient(90deg, #43e97b 0%, #38f9d7 100%)',
-                color: 'white',
-              }}
-            >
-              <Typography variant="h6" gutterBottom>
-                🏆 Most Productive Day
-              </Typography>
+            <Paper sx={{ p: 3, background: 'linear-gradient(90deg, #43e97b 0%, #38f9d7 100%)', color: 'white' }}>
+              <Typography variant="h6" gutterBottom>🏆 Most Productive Day</Typography>
               <Typography variant="h4" fontWeight={700}>
-                {new Date(analytics.bestDay).toLocaleDateString('en-US', {
-                  weekday: 'long',
-                  month: 'long',
-                  day: 'numeric',
-                })}
+                {bestWorstDays.bestDay}
               </Typography>
               <Typography variant="body2" sx={{ opacity: 0.8 }}>
-                Keep up the great work!
+                {bestWorstDays.bestDayLogs} habits/tasks logged
               </Typography>
             </Paper>
           </Grid>
-        )}
-        {analytics?.worstDay && (
           <Grid item xs={12} md={6}>
-            <Paper
-              sx={{
-                p: 3,
-                background: 'linear-gradient(90deg, #f093fb 0%, #f5576c 100%)',
-                color: 'white',
-              }}
-            >
-              <Typography variant="h6" gutterBottom>
-                😴 Least Productive Day
-              </Typography>
+            <Paper sx={{ p: 3, background: 'linear-gradient(90deg, #f093fb 0%, #f5576c 100%)', color: 'white' }}>
+              <Typography variant="h6" gutterBottom>😴 Least Productive Day</Typography>
               <Typography variant="h4" fontWeight={700}>
-                {new Date(analytics.worstDay).toLocaleDateString('en-US', {
-                  weekday: 'long',
-                  month: 'long',
-                  day: 'numeric',
-                })}
+                {bestWorstDays.worstDay}
               </Typography>
               <Typography variant="body2" sx={{ opacity: 0.8 }}>
-                You can do better!
+                {bestWorstDays.worstDayLogs} habits/tasks logged
               </Typography>
             </Paper>
           </Grid>
-        )}
-      </Grid>
+        </Grid>
+      )}
     </Box>
   );
 };

@@ -7,6 +7,8 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
@@ -50,7 +52,7 @@ public class Task {
 
     @NotNull(message = "Due date is required")
     @Column(name = "due_date", nullable = false)
-    private LocalDate dueDate;
+    private LocalDateTime dueDate;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -83,6 +85,7 @@ public class Task {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
+    @JsonIgnore
     private User user;
 
     @CreatedDate
@@ -118,11 +121,11 @@ public class Task {
         this.description = description;
     }
 
-    public LocalDate getDueDate() {
+    public LocalDateTime getDueDate() {
         return dueDate;
     }
 
-    public void setDueDate(LocalDate dueDate) {
+    public void setDueDate(LocalDateTime dueDate) {
         this.dueDate = dueDate;
     }
 
@@ -224,16 +227,16 @@ public class Task {
 
     // Helper methods
     public boolean isOverdue() {
-        return !completed && dueDate.isBefore(LocalDate.now());
+        return !completed && dueDate.toLocalDate().isBefore(LocalDate.now());
     }
 
     public boolean isDueToday() {
-        return dueDate.equals(LocalDate.now());
+        return dueDate.toLocalDate().equals(LocalDate.now());
     }
 
     public boolean isDueThisWeek() {
         LocalDate now = LocalDate.now();
         LocalDate endOfWeek = now.plusDays(7);
-        return dueDate.isAfter(now) && dueDate.isBefore(endOfWeek);
+        return dueDate.toLocalDate().isAfter(now) && dueDate.toLocalDate().isBefore(endOfWeek);
     }
 }

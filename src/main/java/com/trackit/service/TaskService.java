@@ -53,19 +53,21 @@ public class TaskService {
 
     public List<Task> getTodayTasks(User user) {
         log.info("Fetching today's tasks for user: {}", user.getUsername());
-        LocalDate today = LocalDate.now();
-        return taskRepository.findByUserAndDueDate(user, today);
+        LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
+        LocalDateTime endOfDay = startOfDay.plusDays(1);
+        return taskRepository.findByUserAndDueDateBetween(user, startOfDay, endOfDay);
     }
 
     public List<Task> getOverdueTasks(User user) {
         log.info("Fetching overdue tasks for user: {}", user.getUsername());
-        return taskRepository.findByUserAndCompletedFalseAndDueDateBefore(user, LocalDate.now());
+        return taskRepository.findByUserAndCompletedFalseAndDueDateBefore(user, LocalDateTime.now());
     }
 
     public List<Task> getUpcomingTasks(User user, int days) {
         log.info("Fetching upcoming tasks for user: {} for next {} days", user.getUsername(), days);
-        LocalDate endDate = LocalDate.now().plusDays(days);
-        return taskRepository.findByUserAndDueDateBetween(user, LocalDate.now(), endDate);
+        LocalDateTime start = LocalDate.now().atStartOfDay();
+        LocalDateTime end = start.plusDays(days);
+        return taskRepository.findByUserAndDueDateBetween(user, start, end);
     }
 
     public List<Task> getTasksByCategory(User user, String category) {
@@ -80,7 +82,9 @@ public class TaskService {
 
     public List<Task> getTaskHistory(User user, LocalDate start, LocalDate end) {
         log.info("Fetching task history for user: {} from {} to {}", user.getUsername(), start, end);
-        return taskRepository.findByUserAndDueDateBetween(user, start, end);
+        LocalDateTime startDateTime = start.atStartOfDay();
+        LocalDateTime endDateTime = end.plusDays(1).atStartOfDay();
+        return taskRepository.findByUserAndDueDateBetween(user, startDateTime, endDateTime);
     }
 
     public Task markTaskComplete(Long taskId, User user) {

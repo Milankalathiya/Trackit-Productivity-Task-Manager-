@@ -1,26 +1,34 @@
 package com.trackit.model;
 
-import jakarta.persistence.*;
-
 import java.time.LocalDate;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 
 @Entity
 public class HabitLog {
 
     @Id
-    @GeneratedValue (strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     private LocalDate logDate;
 
     @ManyToOne
     @JoinColumn(name = "user_id")
+    @JsonIgnore
     private User user;
 
     @ManyToOne
-    @JoinColumn(name = "habit_id") // 🆕 Add this line
+    @JoinColumn(name = "habit_id")
+    @JsonIgnore
     private Habit habit;
-
 
     public Habit getHabit() {
         return habit;

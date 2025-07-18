@@ -73,4 +73,8 @@ public class HabitLogService {
                         Collectors.counting()
                 ));
     }
+
+    public List<HabitLog> getLogsForHabit(Habit habit) {
+        return habitLogRepository.findByHabit(habit);
+    }
 }

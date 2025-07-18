@@ -17,18 +17,38 @@ export const analyticsService = {
   async getTaskCompletion(
     days: number = 7
   ): Promise<{ date: string; completed: number; total: number }[]> {
-    const response = await api.get<
-      ApiResponse<{ date: string; completed: number; total: number }[]>
-    >(`/analytics/task-completion?days=${days}`);
-    return response.data.data;
+    const response = await api.get(`/analytics/task-completion?days=${days}`);
+    const data = response.data;
+    const completionByDay = data.completionByDay || {};
+    const total = data.totalTasks || 0;
+    return Object.entries(completionByDay).map(([date, completed]: any) => ({
+      date,
+      completed,
+      total,
+    }));
   },
 
   async getHabitConsistency(
     days: number = 7
   ): Promise<{ date: string; logged: number; total: number }[]> {
-    const response = await api.get<
-      ApiResponse<{ date: string; logged: number; total: number }[]>
-    >(`/analytics/habit-consistency?days=${days}`);
-    return response.data.data;
+    const response = await api.get(`/analytics/habit-consistency?days=${days}`);
+    const data = response.data;
+    const consistencyByDay = data.consistencyByDay || {};
+    const total = data.totalDays || 0;
+    return Object.entries(consistencyByDay).map(([date, logged]: any) => ({
+      date,
+      logged,
+      total,
+    }));
+  },
+
+  getBestWorstDays: async (days: number) => {
+    const endDate = new Date();
+    const startDate = new Date();
+    startDate.setDate(endDate.getDate() - days + 1);
+    const start = startDate.toISOString().slice(0, 10);
+    const end = endDate.toISOString().slice(0, 10);
+    const { data } = await api.get(`/analytics/best-worst-days?startDate=${start}&endDate=${end}`);
+    return data;
   },
 };

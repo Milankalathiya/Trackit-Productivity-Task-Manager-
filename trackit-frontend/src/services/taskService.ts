@@ -92,7 +92,16 @@ class TaskService {
   // Get task analytics
   async getTaskAnalytics(): Promise<TaskAnalytics> {
     const response = await api.get('/tasks/analytics');
-    return response.data;
+    const data = response.data;
+    return {
+      totalTasks: data.totalTasks || 0,
+      completedTasks: data.completedTasks || 0,
+      overdueTasks: data.overdueTasks || 0,
+      todayTasks: data.todayTasks || 0,
+      completionRate: data.completionRate || 0,
+      tasksByPriority: data.tasksByPriority || {},
+      tasksByCategory: data.tasksByCategory || {},
+    };
   }
 
   // Get task categories

@@ -19,6 +19,7 @@ import TaskCard from '../components/tasks/TaskCard';
 import TaskForm from '../components/tasks/TaskForm';
 import { useTasks } from '../hooks/useTasks';
 import type { Task, TaskRequest } from '../types';
+import { refetchDashboard } from './Dashboard';
 
 const Tasks: React.FC = () => {
   const {
@@ -29,6 +30,7 @@ const Tasks: React.FC = () => {
     updateTask,
     deleteTask,
     toggleTaskComplete,
+    refetch,
   } = useTasks();
   const [tab, setTab] = useState(0);
   const [showDialog, setShowDialog] = useState(false);
@@ -69,9 +71,11 @@ const Tasks: React.FC = () => {
       if (editingTask) {
         await updateTask(editingTask.id, data);
         setSnackbar('Task updated successfully!');
+        await refetch();
       } else {
         await createTask(data);
         setSnackbar('Task created successfully!');
+        await refetch();
       }
       handleCloseDialog();
     } finally {
@@ -82,6 +86,9 @@ const Tasks: React.FC = () => {
   const handleToggleComplete = async (task: Task) => {
     await toggleTaskComplete(task.id);
     setSnackbar(task.completed ? 'Task marked incomplete' : 'Task completed!');
+    await refetch();
+    if (refetchDashboard) refetchDashboard();
+    window.location.reload(); // Force reload for diagnostic
   };
 
   const handleDelete = async (taskId: number) => {

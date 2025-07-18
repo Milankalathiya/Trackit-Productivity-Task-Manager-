@@ -1,6 +1,6 @@
 package com.trackit.dto;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 import com.trackit.model.Priority;
 import com.trackit.model.RepeatType;
@@ -21,7 +21,7 @@ public class TaskRequest {
     private String description;
 
     @NotNull(message = "Due date is required")
-    private LocalDate dueDate;
+    private LocalDateTime dueDate;
 
     private Priority priority = Priority.MEDIUM;
 

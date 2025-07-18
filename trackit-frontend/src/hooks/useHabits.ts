@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import { habitService } from '../services/habitService';
-import type { Habit } from '../types';
+import type { Habit, HabitLog } from '../types';
 
 interface HabitFormData {
   name: string;
@@ -19,7 +19,15 @@ export const useHabits = () => {
     setError(null);
     try {
       const data = await habitService.getAllHabits();
-      setHabits(data);
+      // Fetch last log for each habit
+      const habitsWithLog = await Promise.all(
+        data.map(async (habit: Habit) => {
+          const logs: HabitLog[] = await habitService.getHabitLogs(habit.id);
+          const lastLog = logs.length > 0 ? logs.reduce((a, b) => (a.logDate > b.logDate ? a : b)) : null;
+          return { ...habit, lastLogDate: lastLog ? lastLog.logDate : null };
+        })
+      );
+      setHabits(habitsWithLog);
     } catch (err: unknown) {
       const errorMessage =
         err instanceof Error ? err.message : 'Failed to fetch habits';

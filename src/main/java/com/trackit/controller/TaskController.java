@@ -195,4 +195,5 @@ public class TaskController {
         List<String> categories = taskService.getTaskCategories(user);
         return ResponseEntity.ok(categories);
     }
+    
 }

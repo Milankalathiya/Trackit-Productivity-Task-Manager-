@@ -56,11 +56,12 @@ const TaskForm: React.FC<TaskFormProps> = ({
   });
 
   const handleFormSubmit = async (data: TaskRequest) => {
+    // Always include dueDate in ISO format (date only, not datetime)
+    const dueDateISO = new Date(dueDate).toISOString();
     const taskData: TaskRequest = {
       ...data,
-      dueDate: new Date(dueDate).toISOString(),
+      dueDate: dueDateISO,
     };
-
     await onSubmit(taskData);
     reset();
     setDueDate(new Date().toISOString().slice(0, 16));

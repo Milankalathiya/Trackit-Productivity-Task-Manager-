@@ -1,15 +1,15 @@
 package com.trackit.service;
 
+import java.util.List;
+
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Service;
+
 import com.trackit.model.Habit;
 import com.trackit.model.User;
 import com.trackit.repository.HabitRepository;
 import com.trackit.repository.UserRepository;
-import org.springframework.stereotype.Service;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.Authentication;
-
-
-import java.util.List;
 
 @Service
 public class HabitService {
@@ -33,6 +33,13 @@ public class HabitService {
         return habitRepo.findByUser(user);
     }
 
+    public void deleteHabit(Long habitId, User user) {
+        Habit habit = habitRepo.findById(habitId)
+                .filter(h -> h.getUser().getId().equals(user.getId()))
+                .orElseThrow(() -> new RuntimeException("Habit not found or not yours"));
+        // Delete associated logs if needed (handled by cascade or manually)
+        habitRepo.delete(habit);
+    }
 
 
     public String getCurrentUserEmail() {

@@ -60,6 +60,7 @@ export interface Habit {
   user: User;
   currentStreak?: number;
   longestStreak?: number;
+  lastLogDate?: string;
 }
 
 export interface HabitLog {

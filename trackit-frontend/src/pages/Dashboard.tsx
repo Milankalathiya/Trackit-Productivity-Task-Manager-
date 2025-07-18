@@ -15,7 +15,7 @@ import {
   Typography,
 } from '@mui/material';
 import { format } from 'date-fns';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   Bar,
   BarChart,
@@ -32,6 +32,9 @@ import {
 import { useAuth } from '../contexts/AuthContext';
 import { habitService } from '../services/habitService';
 import { taskService } from '../services/taskService';
+import { analyticsService } from '../services/analyticsService';
+
+export let refetchDashboard: (() => void) | null = null;
 
 const Dashboard: React.FC = () => {
   const [stats, setStats] = useState<any>({});
@@ -39,13 +42,10 @@ const Dashboard: React.FC = () => {
   const [recentHabits, setRecentHabits] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [barChartData, setBarChartData] = useState<any[]>([]);
   const { user } = useAuth();
 
-  useEffect(() => {
-    loadDashboardData();
-  }, []);
-
-  const loadDashboardData = async () => {
+  const loadDashboardData = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -71,6 +71,38 @@ const Dashboard: React.FC = () => {
     } finally {
       setLoading(false);
     }
+  }, []);
+
+  useEffect(() => {
+    loadDashboardData();
+    loadWeeklyChartData();
+    refetchDashboard = loadDashboardData;
+    return () => {
+      refetchDashboard = null;
+    };
+  }, [loadDashboardData]);
+
+  const loadWeeklyChartData = async () => {
+    try {
+      // Fetch last 7 days of task completion and habit consistency
+      const [taskData, habitData] = await Promise.all([
+        analyticsService.getTaskCompletion(7),
+        analyticsService.getHabitConsistency(7),
+      ]);
+      // Merge data by date
+      const dates = Array.from(new Set([
+        ...taskData.map((d: any) => d.date),
+        ...habitData.map((d: any) => d.date),
+      ])).sort();
+      const merged = dates.map(date => ({
+        name: new Date(date).toLocaleDateString('en-US', { weekday: 'short' }),
+        tasks: (taskData.find((d: any) => d.date === date)?.completed) || 0,
+        habits: (habitData.find((d: any) => d.date === date)?.logged) || 0,
+      }));
+      setBarChartData(merged);
+    } catch (err) {
+      setBarChartData([]);
+    }
   };
 
   const pieChartData = [
@@ -78,16 +110,6 @@ const Dashboard: React.FC = () => {
     { name: 'Pending', value: stats.pendingTasks, color: '#ff9800' },
     { name: 'Overdue', value: stats.overdueTasks, color: '#f44336' },
   ];
-
-  const barChartData = [
-    { name: 'Mon', tasks: 4, habits: 3 },
-    { name: 'Tue', tasks: 6, habits: 5 },
-    { name: 'Wed', tasks: 3, habits: 4 },
-    { name: 'Thu', tasks: 8, habits: 6 },
-    { name: 'Fri', tasks: 5, habits: 4 },
-    { name: 'Sat', tasks: 2, habits: 3 },
-    { name: 'Sun', tasks: 7, habits: 5 },
-  ]; // TODO: Replace with real data
 
   if (loading) {
     return (

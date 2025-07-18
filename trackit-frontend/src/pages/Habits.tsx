@@ -16,6 +16,7 @@ import HabitCard from '../components/habits/HabitCard';
 import HabitForm from '../components/habits/HabitForm';
 import { useHabits } from '../hooks/useHabits';
 import type { Habit, HabitFormData } from '../types';
+import { isToday } from 'date-fns';
 
 const Habits: React.FC = () => {
   const {
@@ -150,6 +151,7 @@ const Habits: React.FC = () => {
                       onLogHabit={logHabit}
                       onEdit={handleEdit}
                       onDelete={handleDelete}
+                      isLoggedToday={habit.lastLogDate ? isToday(new Date(habit.lastLogDate)) : false}
                     />
                   </Grid>
                 ))}
@@ -169,6 +171,7 @@ const Habits: React.FC = () => {
                       onLogHabit={logHabit}
                       onEdit={handleEdit}
                       onDelete={handleDelete}
+                      isLoggedToday={habit.lastLogDate ? isToday(new Date(habit.lastLogDate)) : false}
                     />
                   </Grid>
                 ))}
@@ -179,24 +182,13 @@ const Habits: React.FC = () => {
       )}
 
       {/* Habit Form Dialog */}
-      <Dialog open={showDialog} onClose={closeDialog} maxWidth="sm" fullWidth>
-        <DialogTitle>
-          {editingHabit ? 'Edit Habit' : 'Create New Habit'}
-        </DialogTitle>
-        <DialogContent>
-          <HabitForm
-            habit={editingHabit || undefined}
-            onSubmit={editingHabit ? handleUpdateHabit : handleCreateHabit}
-            loading={submitting}
-            onClose={closeDialog}
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={closeDialog} disabled={submitting}>
-            Cancel
-          </Button>
-        </DialogActions>
-      </Dialog>
+      <HabitForm
+        open={showDialog}
+        onClose={closeDialog}
+        habit={editingHabit || undefined}
+        onSubmit={editingHabit ? handleUpdateHabit : handleCreateHabit}
+        loading={submitting}
+      />
     </Box>
   );
 };

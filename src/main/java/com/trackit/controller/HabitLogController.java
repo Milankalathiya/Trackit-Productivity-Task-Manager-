@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import java.security.Principal;
 import java.util.List;
 import java.util.Map;
+import java.time.LocalDate;
 
 @RestController
 @RequestMapping("/api/habits")
@@ -54,6 +55,13 @@ public class HabitLogController {
         Habit habit = validateOwnership(id, principal.getName());
         Map<String, Long> progress = habitLogService.getWeeklyProgress(habit);
         return ResponseEntity.ok(progress);
+    }
+
+    @GetMapping("/{id}/logs")
+    public ResponseEntity<List<HabitLog>> getHabitLogs(@PathVariable Long id, Principal principal) {
+        Habit habit = validateOwnership(id, principal.getName());
+        List<HabitLog> logs = habitLogService.getLogsForHabit(habit);
+        return ResponseEntity.ok(logs);
     }
 
     private Habit validateOwnership(Long habitId, String username) {
