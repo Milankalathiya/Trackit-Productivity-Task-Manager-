@@ -109,6 +109,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
 
       // Get full user profile
       const userProfile = await authService.getProfile();
+      console.log('User profile from API:', userProfile);
 
       setAuthData(response.token, userProfile);
       localStorage.setItem(USER_KEY, JSON.stringify(userProfile));
@@ -119,6 +120,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
           user: userProfile,
           token: response.token,
         },
+      });
+
+      console.log('AuthContext state after login:', {
+        user: userProfile,
+        token: response.token,
       });
 
       toast.success('Login successful!');

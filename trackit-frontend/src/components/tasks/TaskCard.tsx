@@ -3,8 +3,7 @@ import {
   CheckCircle,
   Delete,
   Edit,
-  ExpandLess,
-  ExpandMore,
+  PlayArrow,
   PriorityHigh,
   Schedule,
 } from '@mui/icons-material';
@@ -12,55 +11,34 @@ import {
   Box,
   Card,
   CardContent,
-  Checkbox,
   Chip,
-  Collapse,
+  FormControl,
   IconButton,
+  MenuItem,
+  Select,
+  SelectChangeEvent,
   Tooltip,
   Typography,
-  Menu,
-  MenuItem,
 } from '@mui/material';
 import { format } from 'date-fns';
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import type { Task } from '../../types';
+
+type TaskStatus = 'TODO' | 'IN_PROGRESS' | 'DONE';
 
 interface TaskCardProps {
   task: Task;
   onEdit: (task: Task) => void;
   onDelete: (taskId: number) => void;
   onToggleComplete: (taskId: number) => void;
-  expanded?: boolean;
-  onToggleExpand?: () => void;
 }
-
-const statusOptions = [
-  { value: 'TODO', label: 'To-Do', sx: { bgcolor: '#e0e0e0', color: 'black', border: '1.5px solid #bdbdbd' } },
-  { value: 'IN_PROGRESS', label: 'In Progress', sx: { bgcolor: '#e3f2fd', color: '#1976d2', border: '1.5px solid #1976d2' } },
-  { value: 'DONE', label: 'Done', sx: { bgcolor: '#e8f5e9', color: '#388e3c', border: '1.5px solid #388e3c' } },
-];
 
 const TaskCard: React.FC<TaskCardProps> = ({
   task,
   onEdit,
   onDelete,
   onToggleComplete,
-  expanded = false,
-  onToggleExpand,
 }) => {
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'HIGH':
-        return 'error';
-      case 'MEDIUM':
-        return 'warning';
-      case 'LOW':
-        return 'success';
-      default:
-        return 'default';
-    }
-  };
-
   const getPriorityIcon = (priority: string) => {
     switch (priority) {
       case 'HIGH':
@@ -70,176 +48,303 @@ const TaskCard: React.FC<TaskCardProps> = ({
     }
   };
 
-  const isOverdue = new Date(task.dueDate) < new Date() && !task.completed;
-
   // Status dropdown state
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const [status, setStatus] = useState(task.completed ? 'DONE' : (task.status || 'TODO'));
+  const [status, setStatus] = useState<TaskStatus>(
+    task.completed ? 'DONE' : (task.status as TaskStatus) || 'TODO'
+  );
 
   useEffect(() => {
-    setStatus(task.completed ? 'DONE' : (task.status || 'TODO'));
+    setStatus(task.completed ? 'DONE' : (task.status as TaskStatus) || 'TODO');
   }, [task.completed, task.status]);
-  const handleStatusClick = (event: React.MouseEvent<HTMLElement>) => {
-    setAnchorEl(event.currentTarget);
-  };
-  const handleStatusClose = () => {
-    setAnchorEl(null);
-  };
-  const handleStatusChange = (option: string) => {
-    setStatus(option);
-    setAnchorEl(null);
-    // Optionally, call a prop to update status in backend
-    if (option === 'DONE') onToggleComplete(task.id);
+
+  const handleStatusChange = (newStatus: TaskStatus) => {
+    setStatus(newStatus);
+    // Call the appropriate function based on status
+    if (newStatus === 'DONE') {
+      onToggleComplete(task.id);
+    }
     // You can add more logic for other statuses if needed
+  };
+
+  const getStatusColor = (status: TaskStatus) => {
+    switch (status) {
+      case 'TODO':
+        return '#FF9800'; // Orange
+      case 'IN_PROGRESS':
+        return '#2196F3'; // Blue
+      case 'DONE':
+        return '#4CAF50'; // Green
+      default:
+        return '#757575'; // Gray
+    }
+  };
+
+  const getStatusIcon = (status: TaskStatus) => {
+    switch (status) {
+      case 'TODO':
+        return <Schedule fontSize="small" />;
+      case 'IN_PROGRESS':
+        return <PlayArrow fontSize="small" />;
+      case 'DONE':
+        return <CheckCircle fontSize="small" />;
+      default:
+        return <Schedule fontSize="small" />;
+    }
+  };
+
+  const getStatusLabel = (status: TaskStatus) => {
+    switch (status) {
+      case 'TODO':
+        return 'To-Do';
+      case 'IN_PROGRESS':
+        return 'In Progress';
+      case 'DONE':
+        return 'Done';
+      default:
+        return 'To-Do';
+    }
+  };
+
+  const handleDropdownChange = (event: SelectChangeEvent<TaskStatus>) => {
+    handleStatusChange(event.target.value as TaskStatus);
   };
 
   return (
     <Card
       sx={{
-        mb: 2,
-        border: isOverdue ? '2px solid #f44336' : '1px solid #e0e0e0',
         backgroundColor: 'white',
-        boxShadow: 2,
-        borderRadius: 3,
-        transition: 'box-shadow 0.2s',
-        '&:hover': { boxShadow: 6 },
-        minHeight: 220,
+        borderRadius: 4,
+        boxShadow: '0 2px 12px rgba(0,0,0,0.07)',
+        border: 'none',
+        minWidth: 280,
+        maxWidth: 370,
+        width: '100%',
+        p: 0,
+        m: 0,
         display: 'flex',
         flexDirection: 'column',
+        transition: 'box-shadow 0.2s',
+        '&:hover': { boxShadow: 8 },
       }}
     >
-      <CardContent sx={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-        <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
-          {/* Remove status dropdown from here */}
-          <Box sx={{ flexGrow: 1, minWidth: 0 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-              <Typography
-                variant="h6"
-                sx={{
-                  textDecoration: task.completed ? 'line-through' : 'none',
-                  color: task.completed ? 'text.secondary' : 'text.primary',
-                  flexGrow: 1,
-                }}
-              >
-                {task.title}
-              </Typography>
-
-              <Chip
-                label={task.priority}
-                color={getPriorityColor(task.priority)}
-                size="small"
-                icon={getPriorityIcon(task.priority)}
-              />
-
-              {task.category && (
-                <Chip
-                  label={task.category}
-                  variant="outlined"
-                  size="small"
-                  icon={<Category fontSize="small" />}
-                />
-              )}
-            </Box>
-
-            {task.description && (
-              <Typography
-                variant="body2"
-                color="text.secondary"
-                sx={{
-                  textDecoration: task.completed ? 'line-through' : 'none',
-                  mb: 1,
-                }}
-              >
-                {task.description}
-              </Typography>
-            )}
-
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                <Schedule fontSize="small" color="action" />
-                <Typography variant="body2" color="text.secondary">
-                  {format(new Date(task.dueDate), 'MMM dd, yyyy HH:mm')}
-                </Typography>
-              </Box>
-
-              {task.repeatType !== 'NONE' && (
-                <Chip label={task.repeatType} size="small" variant="outlined" />
-              )}
-            </Box>
-
-            <Collapse in={expanded}>
-              <Box sx={{ mt: 2, pt: 2, borderTop: '1px solid #e0e0e0' }}>
-                <Box sx={{ display: 'flex', gap: 2, mb: 1 }}>
-                  {task.estimatedHours && (
-                    <Typography variant="body2" color="text.secondary">
-                      Estimated: {task.estimatedHours}h
-                    </Typography>
-                  )}
-                  {task.actualHours && (
-                    <Typography variant="body2" color="text.secondary">
-                      Actual: {task.actualHours}h
-                    </Typography>
-                  )}
-                </Box>
-
-                <Typography variant="caption" color="text.secondary">
-                  Created: {format(new Date(task.createdAt), 'MMM dd, yyyy')}
-                </Typography>
-              </Box>
-            </Collapse>
-          </Box>
-
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-            {onToggleExpand && (
-              <IconButton size="small" onClick={onToggleExpand}>
-                {expanded ? <ExpandLess /> : <ExpandMore />}
-              </IconButton>
-            )}
-
+      <CardContent
+        sx={{
+          p: 3,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 1.5,
+          alignItems: 'flex-start',
+          width: '100%',
+        }}
+      >
+        {/* Top row: title, badges, edit/delete */}
+        <Box
+          sx={{ display: 'flex', alignItems: 'center', width: '100%', mb: 1 }}
+        >
+          <Typography
+            variant="h6"
+            sx={{
+              textDecoration: task.completed ? 'line-through' : 'none',
+              color: task.completed ? 'text.secondary' : 'text.primary',
+              fontWeight: 700,
+              flexGrow: 1,
+              minWidth: 0,
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {task.title}
+          </Typography>
+          <Chip
+            label={task.priority}
+            sx={{
+              borderRadius: '12px',
+              fontWeight: 600,
+              fontSize: '0.85em',
+              px: 1.5,
+              backgroundColor:
+                task.priority === 'HIGH'
+                  ? '#ff4d4f'
+                  : task.priority === 'MEDIUM'
+                  ? '#faad14'
+                  : task.priority === 'LOW'
+                  ? '#52c41a'
+                  : '#e0e0e0',
+              color: '#fff',
+              ml: 1,
+            }}
+            size="small"
+            icon={getPriorityIcon(task.priority)}
+          />
+          {task.category && (
+            <Chip
+              label={task.category}
+              variant="outlined"
+              size="small"
+              icon={<Category fontSize="small" />}
+              sx={{
+                borderRadius: '12px',
+                fontWeight: 500,
+                fontSize: '0.85em',
+                px: 1.2,
+                ml: 1,
+              }}
+            />
+          )}
+          <Box sx={{ display: 'flex', alignItems: 'center', ml: 1 }}>
             <Tooltip title="Edit Task">
               <IconButton
                 size="small"
                 onClick={() => onEdit(task)}
                 disabled={task.completed}
+                sx={{ borderRadius: '8px' }}
               >
                 <Edit fontSize="small" />
               </IconButton>
             </Tooltip>
-
             <Tooltip title="Delete Task">
               <IconButton
                 size="small"
                 onClick={() => onDelete(task.id)}
                 color="error"
+                sx={{ borderRadius: '8px' }}
               >
                 <Delete fontSize="small" />
               </IconButton>
             </Tooltip>
           </Box>
         </Box>
-        {/* Status Dropdown at bottom-right */}
-        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
-          <Chip
-            label={statusOptions.find(opt => opt.value === status)?.label || 'To-Do'}
-            onClick={handleStatusClick}
+        {/* Description */}
+        {task.description && (
+          <Typography
+            variant="body2"
+            color="text.secondary"
             sx={{
-              cursor: 'pointer',
-              fontWeight: 600,
-              fontSize: 16,
-              px: 2,
-              py: 0.5,
-              borderRadius: '6px',
-              minWidth: 140,
-              ...statusOptions.find(opt => opt.value === status)?.sx,
+              textDecoration: task.completed ? 'line-through' : 'none',
+              mb: 1,
             }}
-          />
-          <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleStatusClose} MenuListProps={{ sx: { p: 0 } }}>
-            {statusOptions.map((opt) => (
-              <MenuItem key={opt.value} onClick={() => handleStatusChange(opt.value)} sx={{ p: 0, mb: 0, minWidth: 140, width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <Chip label={opt.label} sx={{ ...opt.sx, fontWeight: 600, fontSize: 16, px: 2, py: 0.5, borderRadius: '6px', minWidth: 140, width: '100%', border: 'none' }} />
+          >
+            {task.description}
+          </Typography>
+        )}
+        {/* Date and repeat */}
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1.5,
+            mb: 1,
+            width: '100%',
+          }}
+        >
+          <Schedule fontSize="small" color="action" />
+          <Typography variant="body2" color="text.secondary">
+            {format(new Date(task.dueDate), 'MMM dd, yyyy HH:mm')}
+          </Typography>
+          {task.repeatType !== 'NONE' && (
+            <Chip
+              label={task.repeatType}
+              size="small"
+              variant="outlined"
+              sx={{
+                borderRadius: '10px',
+                fontSize: '0.8em',
+                ml: 1,
+                alignSelf: 'center',
+              }}
+            />
+          )}
+        </Box>
+        {/* Status dropdown at bottom */}
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'flex-end',
+            width: '100%',
+            mt: 2,
+          }}
+        >
+          <FormControl size="small" sx={{ minWidth: 120 }}>
+            <Select
+              value={status}
+              onChange={handleDropdownChange}
+              disabled={task.completed}
+              displayEmpty
+              sx={{
+                borderRadius: '999px',
+                background: '#f5f5f5',
+                fontWeight: 600,
+                px: 1.5,
+                py: 0.5,
+                '& .MuiSelect-select': {
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 1,
+                  py: 0.5,
+                  borderRadius: '999px',
+                },
+                '& .MuiOutlinedInput-notchedOutline': {
+                  borderColor: getStatusColor(status),
+                  borderRadius: '999px',
+                },
+                '&:hover .MuiOutlinedInput-notchedOutline': {
+                  borderColor: getStatusColor(status),
+                },
+                '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                  borderColor: getStatusColor(status),
+                },
+              }}
+              renderValue={(value) => (
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  {getStatusIcon(value)}
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      color: getStatusColor(value),
+                      fontWeight: 600,
+                    }}
+                  >
+                    {getStatusLabel(value)}
+                  </Typography>
+                </Box>
+              )}
+            >
+              <MenuItem value="TODO">
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Schedule fontSize="small" sx={{ color: '#FF9800' }} />
+                  <Typography
+                    variant="body2"
+                    sx={{ color: '#FF9800', fontWeight: 600 }}
+                  >
+                    To-Do
+                  </Typography>
+                </Box>
               </MenuItem>
-            ))}
-          </Menu>
+              <MenuItem value="IN_PROGRESS">
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <PlayArrow fontSize="small" sx={{ color: '#2196F3' }} />
+                  <Typography
+                    variant="body2"
+                    sx={{ color: '#2196F3', fontWeight: 600 }}
+                  >
+                    In Progress
+                  </Typography>
+                </Box>
+              </MenuItem>
+              <MenuItem value="DONE">
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <CheckCircle fontSize="small" sx={{ color: '#4CAF50' }} />
+                  <Typography
+                    variant="body2"
+                    sx={{ color: '#4CAF50', fontWeight: 600 }}
+                  >
+                    Done
+                  </Typography>
+                </Box>
+              </MenuItem>
+            </Select>
+          </FormControl>
         </Box>
       </CardContent>
     </Card>

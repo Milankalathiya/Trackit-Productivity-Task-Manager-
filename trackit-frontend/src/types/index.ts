@@ -31,6 +31,7 @@ export interface Task {
   actualHours?: number;
   completed: boolean;
   completedAt?: string;
+  status?: 'TODO' | 'IN_PROGRESS' | 'DONE';
   archived: boolean;
   reminderSent: boolean;
   user: User;

@@ -1,8 +1,8 @@
 import TaskIcon from '@mui/icons-material/Assignment';
+import LocalFireDepartmentIcon from '@mui/icons-material/LocalFireDepartment';
 import HabitIcon from '@mui/icons-material/Loop';
 import PendingIcon from '@mui/icons-material/Schedule';
 import AnalyticsIcon from '@mui/icons-material/TrendingUp';
-import LocalFireDepartmentIcon from '@mui/icons-material/LocalFireDepartment';
 import {
   Alert,
   Avatar,
@@ -16,7 +16,7 @@ import {
   Typography,
 } from '@mui/material';
 import { format } from 'date-fns';
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   Bar,
   BarChart,
@@ -31,23 +31,46 @@ import {
   YAxis,
 } from 'recharts';
 import { useAuth } from '../contexts/AuthContext';
+import { analyticsService } from '../services/analyticsService';
 import { habitService } from '../services/habitService';
 import { taskService } from '../services/taskService';
-import { analyticsService } from '../services/analyticsService';
+import type { Habit, Task } from '../types';
+
+interface DashboardStats {
+  totalTasks: number;
+  completedTasks: number;
+  pendingTasks: number;
+  overdueTasks: number;
+  totalHabits: number;
+  completedHabits: number;
+  completionRate: number;
+}
 
 export let refetchDashboard: (() => void) | null = null;
 
 const Dashboard: React.FC = () => {
-  const [stats, setStats] = useState<any>({});
-  const [recentTasks, setRecentTasks] = useState<any[]>([]);
-  const [recentHabits, setRecentHabits] = useState<any[]>([]);
+  const [stats, setStats] = useState<DashboardStats>({
+    totalTasks: 0,
+    completedTasks: 0,
+    pendingTasks: 0,
+    overdueTasks: 0,
+    totalHabits: 0,
+    completedHabits: 0,
+    completionRate: 0,
+  });
+  const [recentTasks, setRecentTasks] = useState<Task[]>([]);
+  const [recentHabits, setRecentHabits] = useState<Habit[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [barChartData, setBarChartData] = useState<any[]>([]);
-  const [maxStreak, setMaxStreak] = useState(0);
-  const [habitStreak, setHabitStreak] = useState(0);
-  const [taskStreak, setTaskStreak] = useState(0);
+  const [barChartData, setBarChartData] = useState<
+    { name: string; tasks: number; habits: number }[]
+  >([]);
   const [totalStreak, setTotalStreak] = useState(0);
+  const [pieCounts, setPieCounts] = useState({
+    completed: 0,
+    pending: 0,
+    overdue: 0,
+  });
   const { user } = useAuth();
 
   const loadDashboardData = useCallback(async () => {
@@ -66,13 +89,12 @@ const Dashboard: React.FC = () => {
         pendingTasks: todayTasks.length,
         overdueTasks: overdueTasks.length,
         totalHabits: habits.length,
-        completedHabits: habits.filter((h: any) => h.streak > 0).length,
+        completedHabits: habits.filter((h: Habit) => h.streak > 0).length,
         completionRate: taskAnalytics.completionRate || 0,
       });
       setRecentTasks(todayTasks.slice(0, 5));
       setRecentHabits(habits.slice(0, 5));
-      setMaxStreak(habits.length > 0 ? Math.max(...habits.map((h: any) => h.streak || 0)) : 0);
-    } catch (err: any) {
+    } catch {
       setError('Error loading dashboard data');
     } finally {
       setLoading(false);
@@ -96,16 +118,50 @@ const Dashboard: React.FC = () => {
           habitService.getHabitStreak(),
           taskService.getTaskStreak(),
         ]);
-        setHabitStreak(habit);
-        setTaskStreak(task);
         setTotalStreak(habit + task);
-      } catch (e) {
-        setHabitStreak(0);
-        setTaskStreak(0);
+      } catch {
         setTotalStreak(0);
       }
     };
     fetchStreaks();
+  }, []);
+
+  // Update the pie chart logic to match the user's definition:
+  // - Pending: due today and not completed
+  // - Overdue: due before today and not completed
+  // - Completed: completed tasks
+  //
+  useEffect(() => {
+    const fetchPieData = async () => {
+      try {
+        const allTasks = await taskService.getAllTasks();
+        const now = new Date();
+        const today = new Date(
+          now.getFullYear(),
+          now.getMonth(),
+          now.getDate()
+        );
+        let completed = 0,
+          overdue = 0,
+          pending = 0;
+        allTasks.forEach((task) => {
+          const due = new Date(task.dueDate);
+          const dueDay = new Date(
+            due.getFullYear(),
+            due.getMonth(),
+            due.getDate()
+          );
+          if (task.completed) completed++;
+          else if (dueDay < today) overdue++;
+          else if (dueDay.getTime() === today.getTime()) pending++;
+          // else: future tasks, not counted
+        });
+        setPieCounts({ completed, pending, overdue });
+      } catch {
+        setPieCounts({ completed: 0, pending: 0, overdue: 0 });
+      }
+    };
+    fetchPieData();
   }, []);
 
   const loadWeeklyChartData = async () => {
@@ -116,25 +172,30 @@ const Dashboard: React.FC = () => {
         analyticsService.getHabitConsistency(7),
       ]);
       // Merge data by date
-      const dates = Array.from(new Set([
-        ...taskData.map((d: any) => d.date),
-        ...habitData.map((d: any) => d.date),
-      ])).sort();
-      const merged = dates.map(date => ({
+      const dates = Array.from(
+        new Set([
+          ...taskData.map((d: { date: string }) => d.date),
+          ...habitData.map((d: { date: string }) => d.date),
+        ])
+      ).sort();
+      const merged = dates.map((date) => ({
         name: new Date(date).toLocaleDateString('en-US', { weekday: 'short' }),
-        tasks: (taskData.find((d: any) => d.date === date)?.completed) || 0,
-        habits: (habitData.find((d: any) => d.date === date)?.logged) || 0,
+        tasks:
+          taskData.find((d: { date: string }) => d.date === date)?.completed ||
+          0,
+        habits:
+          habitData.find((d: { date: string }) => d.date === date)?.logged || 0,
       }));
       setBarChartData(merged);
-    } catch (err) {
+    } catch {
       setBarChartData([]);
     }
   };
 
   const pieChartData = [
-    { name: 'Completed', value: stats.completedTasks, color: '#4caf50' },
-    { name: 'Pending', value: stats.pendingTasks, color: '#ff9800' },
-    { name: 'Overdue', value: stats.overdueTasks, color: '#f44336' },
+    { name: 'Completed', value: pieCounts.completed, color: '#4caf50' },
+    { name: 'Pending', value: pieCounts.pending, color: '#ff9800' },
+    { name: 'Overdue', value: pieCounts.overdue, color: '#f44336' },
   ];
 
   if (loading) {
@@ -158,7 +219,14 @@ const Dashboard: React.FC = () => {
   return (
     <Box sx={{ flexGrow: 1, p: { xs: 1, md: 3 } }}>
       {/* Welcome Section */}
-      <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <Box
+        sx={{
+          mb: 4,
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+        }}
+      >
         <Box>
           <Typography variant="h4" fontWeight={700} gutterBottom>
             Welcome back, {user?.username}!
@@ -181,10 +249,12 @@ const Dashboard: React.FC = () => {
             fontSize: 18,
             gap: 1,
             minWidth: 60,
-            justifyContent: 'center'
+            justifyContent: 'center',
           }}
         >
-          <LocalFireDepartmentIcon sx={{ color: 'black', fontSize: 24, mr: 0.5 }} />
+          <LocalFireDepartmentIcon
+            sx={{ color: 'black', fontSize: 24, mr: 0.5 }}
+          />
           <span style={{ color: 'black' }}>{totalStreak}</span>
         </Box>
       </Box>
@@ -246,7 +316,7 @@ const Dashboard: React.FC = () => {
                 <Typography variant="h6">Completion Rate</Typography>
               </Box>
               <Typography variant="h3" sx={{ fontWeight: 700 }}>
-                {Math.round(stats.completionRate * 100)}%
+                {Math.round(stats.completionRate)}%
               </Typography>
               <Typography variant="body2" sx={{ opacity: 0.8 }}>
                 of tasks completed

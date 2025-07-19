@@ -15,13 +15,13 @@ import {
   Tabs,
   Typography,
 } from '@mui/material';
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import TaskCard from '../components/tasks/TaskCard';
 import TaskForm from '../components/tasks/TaskForm';
 import { useTasks } from '../hooks/useTasks';
+import { taskService } from '../services/taskService';
 import type { Task, TaskRequest } from '../types';
 import { refetchDashboard } from './Dashboard';
-import { taskService } from '../services/taskService';
 
 const Tasks: React.FC = () => {
   const {
@@ -46,7 +46,7 @@ const Tasks: React.FC = () => {
       try {
         const streak = await taskService.getTaskStreak();
         setTaskStreak(streak);
-      } catch (e) {
+      } catch {
         setTaskStreak(0);
       }
     };
@@ -144,10 +144,12 @@ const Tasks: React.FC = () => {
               fontSize: 18,
               gap: 1,
               minWidth: 60,
-              justifyContent: 'center'
+              justifyContent: 'center',
             }}
           >
-            <LocalFireDepartmentIcon sx={{ color: 'black', fontSize: 24, mr: 0.5 }} />
+            <LocalFireDepartmentIcon
+              sx={{ color: 'black', fontSize: 24, mr: 0.5 }}
+            />
             <span style={{ color: 'black' }}>{taskStreak}</span>
           </Box>
         </Box>
@@ -181,14 +183,22 @@ const Tasks: React.FC = () => {
           </Typography>
         </Box>
       ) : (
-        <Grid container spacing={2}>
+        <Grid
+          container
+          spacing={3}
+          justifyContent="flex-start"
+          alignItems="flex-start"
+          sx={{ mt: 2, mb: 2, px: { xs: 1, md: 2 }, width: '100%' }}
+        >
           {filteredTasks.map((task) => (
-            <Grid item xs={12} md={4} key={task.id}>
+            <Grid item xs={12} sm={6} md={4} lg={4} xl={3} key={task.id}>
               <TaskCard
                 task={task}
                 onEdit={handleOpenDialog}
                 onDelete={handleDelete}
-                onToggleComplete={(taskId) => handleToggleComplete(tasks.find(t => t.id === taskId)!.id)}
+                onToggleComplete={(taskId) =>
+                  handleToggleComplete(tasks.find((t) => t.id === taskId)!.id)
+                }
                 onToggleExpand={undefined}
                 expanded={false}
               />

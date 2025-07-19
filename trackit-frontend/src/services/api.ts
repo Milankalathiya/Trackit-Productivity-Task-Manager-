@@ -9,7 +9,7 @@ interface ErrorResponse {
 
 // Create axios instance with base configuration
 const api: AxiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8080/api',
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8081/api',
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',

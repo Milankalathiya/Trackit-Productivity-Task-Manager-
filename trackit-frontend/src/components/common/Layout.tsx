@@ -44,8 +44,16 @@ interface LayoutProps {
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const [profileMenuAnchor, setProfileMenuAnchor] = useState<null | HTMLElement>(null);
-  const { user, logout } = useAuth();
+  const [profileMenuAnchor, setProfileMenuAnchor] =
+    useState<null | HTMLElement>(null);
+  const { state, logout } = useAuth();
+  const user = state.user;
+
+  // Debug: Log user state
+  console.log('Current user:', user);
+  console.log('User username:', user?.username);
+  console.log('User object keys:', user ? Object.keys(user) : 'No user');
+  console.log('Auth state:', state);
   const navigate = useNavigate();
   const location = useLocation();
   const theme = useTheme();
@@ -166,7 +174,16 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
       {/* User Profile Section at bottom */}
       <Box sx={{ p: 2, borderTop: 1, borderColor: 'divider', mt: 'auto' }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', gap: 1, cursor: 'pointer' }} onClick={handleProfileMenuOpen}>
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'flex-start',
+            gap: 1,
+            cursor: 'pointer',
+          }}
+          onClick={handleProfileMenuOpen}
+        >
           <Avatar
             sx={{
               width: 40,
@@ -177,17 +194,35 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             {user?.username?.charAt(0).toUpperCase()}
           </Avatar>
           <Typography variant="subtitle2" sx={{ fontWeight: 600, ml: 1 }}>
-            {user?.username || 'User'}
+            {user?.username
+              ? user.username
+              : user
+              ? 'No Username'
+              : 'Not Logged In'}
           </Typography>
         </Box>
-        <Menu anchorEl={profileMenuAnchor} open={Boolean(profileMenuAnchor)} onClose={handleProfileMenuClose}>
-          <MenuItem onClick={() => { handleProfile(); handleProfileMenuClose(); }}>
+        <Menu
+          anchorEl={profileMenuAnchor}
+          open={Boolean(profileMenuAnchor)}
+          onClose={handleProfileMenuClose}
+        >
+          <MenuItem
+            onClick={() => {
+              handleProfile();
+              handleProfileMenuClose();
+            }}
+          >
             <ProfileIcon sx={{ mr: 1 }} /> Profile
           </MenuItem>
           <MenuItem onClick={handleProfileMenuClose}>
             <SettingsIcon sx={{ mr: 1 }} /> Settings
           </MenuItem>
-          <MenuItem onClick={() => { handleLogout(); handleProfileMenuClose(); }}>
+          <MenuItem
+            onClick={() => {
+              handleLogout();
+              handleProfileMenuClose();
+            }}
+          >
             <Logout sx={{ mr: 1 }} /> Logout
           </MenuItem>
         </Menu>
